@@ -1175,6 +1175,8 @@ function renderHome(){
   ]));
 
   app.appendChild(h('div',{style:'height:20px'}));
+  app.appendChild(h('p',{class:'tag center', style:'margin:18px 0 8px;opacity:.55',
+    text:'Padi Tamil \u00b7 build ' + Engine.BUILD}));
   app.appendChild(h('button',{class:'btn ghost sm', style:'width:100%;opacity:.6', onclick:function(){
     if (confirm('Erase all progress and start over?')){ Engine.reset(); Engine.S.settings.variety=null; Engine.save(); renderHome(); }
   }},['Reset progress']));

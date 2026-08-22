@@ -1,7 +1,7 @@
 /* Padi Tamil — offline cache.
    Once you have opened the app on a device with a connection,
    it keeps working with no internet at all. */
-var CACHE = 'padi-tamil-v2';
+var CACHE = 'padi-tamil-2026-08-22.7';
 var ASSETS = [
   './',
   './index.html',
@@ -26,21 +26,42 @@ self.addEventListener('activate', function (e) {
   }).then(function(){ return self.clients.claim(); }));
 });
 
-/* Stale-while-revalidate: instant offline load from cache, but every
-   visit quietly refreshes the cache in the background so edits to the
-   app actually reach the user on their next open. */
+/* Network first for our own files. The app is small, and being one
+   deploy behind is far worse than a few milliseconds. The cache is
+   kept fully populated so offline still works; it is just no longer
+   allowed to answer while the network is available.
+   Cross-origin (the web fonts) stays cache-first - it never changes. */
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   if (e.request.url.indexOf('http') !== 0) return;
-  e.respondWith(
-    caches.open(CACHE).then(function (cache) {
-      return cache.match(e.request).then(function (hit) {
-        var net = fetch(e.request).then(function (res) {
-          if (res && res.status === 200 && res.type !== 'opaque') cache.put(e.request, res.clone());
+
+  var sameOrigin = e.request.url.indexOf(self.location.origin) === 0;
+
+  if (sameOrigin) {
+    e.respondWith(
+      fetch(e.request).then(function (res) {
+        if (res && res.status === 200) {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+        }
+        return res;
+      }).catch(function () {
+        return caches.match(e.request).then(function (hit) {
+          return hit || caches.match('./index.html');
+        });
+      })
+    );
+  } else {
+    e.respondWith(
+      caches.match(e.request).then(function (hit) {
+        return hit || fetch(e.request).then(function (res) {
+          if (res && res.status === 200 && res.type !== 'opaque') {
+            var copy = res.clone();
+            caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+          }
           return res;
-        }).catch(function () { return hit || caches.match('./index.html'); });
-        return hit || net;
-      });
-    })
-  );
+        });
+      })
+    );
+  }
 });

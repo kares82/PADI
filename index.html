@@ -48,7 +48,13 @@ try{ var _s=(JSON.parse(localStorage.getItem('tamilpath.v1')||'{}').settings||{}
 <script src="app/ui.js"></script>
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  navigator.serviceWorker.register('sw.js').catch(function(){});
+  var hadController = !!navigator.serviceWorker.controller, reloaded = false;
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function(){});
+  // when a new worker takes over an already-running page, the page is
+  // still showing the old code - reload it once so it never lingers
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (hadController && !reloaded) { reloaded = true; location.reload(); }
+  });
 }
 </script>
 </body>

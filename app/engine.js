@@ -5,6 +5,8 @@
 
 var Engine = (function () {
 
+  var BUILD = '2026-08-22.7';
+
   /* ---------------- storage ---------------- */
   var KEY = 'tamilpath.v1';
   var S = {
@@ -12,7 +14,7 @@ var Engine = (function () {
     units: {},      // unitId -> {done:true, best:n}
     streak: { last:null, days:0 },
     stats: { answers:0, correct:0 },
-    settings: { sound:true, variety:null, hideEnglish:false, theme:'mayil', scheme:'auto' },
+    settings: { sound:true, variety:null, hideEnglish:false, theme:'mayil', scheme:'auto', themePicked:false },
     game: { xp:0, todayXp:0, day:null, goal:60, seenLevel:0, read:{} }
   };
 
@@ -47,9 +49,13 @@ var Engine = (function () {
     S.units = (S.units && typeof S.units === 'object') ? S.units : {};
     S.streak   = fill(S.streak,   { last:null, days:0 });
     S.stats    = fill(S.stats,    { answers:0, correct:0 });
-    S.settings = fill(S.settings, { sound:true, variety:null, hideEnglish:false, theme:'mayil', scheme:'auto' });
+    S.settings = fill(S.settings, { sound:true, variety:null, hideEnglish:false, theme:'mayil', scheme:'auto', themePicked:false });
     S.game     = fill(S.game,     { xp:0, todayXp:0, day:null, goal:60, seenLevel:0, read:{} });
     if (!S.settings.theme) S.settings.theme = 'mayil';
+    /* The default was 'ink' for a few days. Anyone who opened the app in
+       that window has it saved and would never see the current default,
+       so move them across once - unless they picked it on purpose. */
+    if (S.settings.theme === 'ink' && !S.settings.themePicked) S.settings.theme = 'mayil';
     S.game.read = (S.game.read && typeof S.game.read === 'object') ? S.game.read : {};
     S.game.xp        = num(S.game.xp, 0);
     S.game.todayXp   = num(S.game.todayXp, 0);
@@ -246,7 +252,7 @@ var Engine = (function () {
                    + parseInt(m.slice(4,6),16) + ',' + alpha + ')';
   }
   function applyTheme(name){
-    if (name) S.settings.theme = name;
+    if (name){ S.settings.theme = name; S.settings.themePicked = true; }
     document.documentElement.setAttribute('data-theme', S.settings.theme || 'mayil');
     if (name) save();
   }
@@ -520,7 +526,7 @@ var Engine = (function () {
   return {
     S:S, save:save, reset:reset, touchStreak:touchStreak, today:today, dayNum:dayNum,
     itemId:itemId, ensure:ensure, grade:grade, dueItems:dueItems, learnedIds:learnedIds,
-    applyTheme:applyTheme, applyScheme:applyScheme, isDark:isDark, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
+    BUILD:BUILD, applyTheme:applyTheme, applyScheme:applyScheme, isDark:isDark, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
     checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
     mastery:mastery, GAPS:GAPS,
     speak:speak, hasTamilVoice:hasTamilVoice, hasClips:hasClips, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
