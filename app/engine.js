@@ -5,7 +5,7 @@
 
 var Engine = (function () {
 
-  var BUILD = '2026-08-22.9';
+  var BUILD = '2026-08-22.10';
 
   /* ---------------- storage ---------------- */
   var KEY = 'tamilpath.v1';
@@ -300,9 +300,59 @@ var Engine = (function () {
       return /[a-zA-Z]/.test(out) ? out : null;
     } catch (e){ return null; }
   }
-  /* strip the diacritic-ish capitals: an English engine reading "paNam"
-     can spell the capital out, and "pa-nam" is closer anyway */
-  function speakableRoman(r){ return String(r).toLowerCase(); }
+  /* Respell for an English engine.
+
+     The display romanisation is written for the eye: "ka", "kaa", "ki".
+     Handed to an English voice those are not words, and a two-letter
+     token gets read as an initialism - "ka" comes out as "kay ay".
+     So a short syllable is respelled into a shape English orthography
+     actually pronounces: ka -> kuh, kaa -> kah, kai -> kye.
+
+     Only single short tokens are touched. Real multi-syllable words
+     like "am-maa" are already read sensibly and are left alone. */
+  var ONSET = { k:'k', ng:'ng', ch:'ch', ny:'ny', T:'t', N:'n', th:'th',
+                n:'n', p:'p', m:'m', y:'y', r:'r', R:'r', l:'l', L:'l',
+                zh:'zh', v:'v', s:'s' };
+  var AFTER_CONS = { a:'uh', aa:'ah', i:'ih', ee:'ee', u:'oo', oo:'oo',
+                     e:'eh', ae:'ay', ai:'ye', o:'oh', oa:'oh', au:'ow' };
+  var ALONE      = { a:'uh', aa:'ah', i:'ih', ee:'ee', u:'ooh', oo:'ooh',
+                     e:'eh', ae:'ay', ai:'eye', o:'oh', oa:'oh', au:'ow' };
+
+  function respellSyllable(tok){
+    var m = /^([a-zA-Z]*?)(aa|ee|oo|ae|ai|au|oa|a|i|u|e|o)$/.exec(tok);
+    if (m){
+      var onset = m[1], vowel = m[2];
+      if (!onset) return ALONE[vowel] || tok;  // a bare vowel letter
+      var c = ONSET[onset];
+      if (c === undefined) c = onset.toLowerCase();
+      return c + (AFTER_CONS[vowel] || vowel);
+    }
+    /* No vowel at all: this is a consonant carrying the pulli, like க்.
+       English cannot voice a stop in isolation and an engine just reads
+       the letter name - "k" becomes "kay", which is not the sound at
+       all. Tamil only ever uses these at the end of a syllable, so put
+       it there: "uk", "um", "uth". The consonant lands in exactly the
+       position the learner will meet it in. */
+    if (/^[a-zA-Z]{1,3}$/.test(tok)){
+      var cc = ONSET[tok];
+      if (cc === undefined) cc = tok.toLowerCase();
+      // "uk" gets read as the country. Anything still two letters is
+      // padded by doubling the consonant: ukk, umm, unn - which English
+      // reads as a short-u syllable rather than an abbreviation.
+      if (cc.length === 1) cc = cc + cc;
+      return 'u' + cc;
+    }
+    return null;
+  }
+
+  function speakableRoman(r){
+    var t = String(r).trim();
+    if (t.indexOf(' ') < 0 && t.indexOf('-') < 0 && t.length <= 4){
+      var re = respellSyllable(t);
+      if (re) return re;
+    }
+    return t.toLowerCase();
+  }
 
   function audioMode(){
     if (clips) return 'clips';
@@ -676,7 +726,7 @@ var Engine = (function () {
     checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
     mastery:mastery, GAPS:GAPS,
     speak:speak, speakKey:speakKey, hasTamilVoice:hasTamilVoice, hasClips:hasClips,
-    audioMode:audioMode, romanFor:romanFor, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
+    audioMode:audioMode, romanFor:romanFor, speakableRoman:speakableRoman, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
     Trace:Trace, shuffle:shuffle, sample:sample, pick:pick, toast:toast
   };
 })();
