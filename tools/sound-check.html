@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound check</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@500&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0E1A18;--card:#132220;--line:#22352F;--ink:#DCE9E4;--dim:#8FA8A0;--acc:#4FB79F;--bad:#E08A72}
+  body{font:16px/1.5 Nunito,system-ui;background:var(--bg);color:var(--ink);margin:0;padding:18px;max-width:900px}
+  h1{font-size:20px;margin:0 0 4px}
+  p{color:var(--dim);margin:0 0 8px}
+  .bar{position:sticky;top:0;background:var(--bg);padding:10px 0 12px;border-bottom:1px solid var(--line);z-index:5}
+  button{background:var(--acc);color:#07201B;border:0;border-radius:10px;padding:10px 15px;font-weight:800;cursor:pointer;font-family:inherit}
+  button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  h2{font-size:14px;letter-spacing:1px;text-transform:uppercase;color:var(--acc);margin:22px 0 8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:9px}
+  .cell{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;cursor:pointer}
+  .cell:active{transform:scale(.98)}
+  .cell.wrong{border-color:var(--bad);background:#2A1712}
+  .ta{font-family:"Noto Sans Tamil",serif;font-size:30px;line-height:1.3}
+  .see{font-size:12px;color:var(--dim)}
+  .say{font-size:17px;font-weight:800;color:var(--acc);margin-top:3px}
+  .mark{font-size:11px;color:var(--dim);margin-top:5px}
+  .cell.wrong .mark{color:var(--bad);font-weight:800}
+  textarea{width:100%;height:130px;background:#07110F;color:var(--acc);border:1px solid var(--line);
+           border-radius:10px;font:12px/1.5 ui-monospace,monospace;padding:10px;margin-top:10px}
+  .note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--dim)}
+</style>
+</head>
+<body>
+<h1>Sound check</h1>
+<p>Every letter the app can say, and the exact text it hands to the voice. Tap one to hear it.
+<b style="color:var(--ink)">Tap the ✗ under any that sounds wrong</b>, then send me the list at the bottom —
+one pass instead of one letter per message.</p>
+
+<div class="bar">
+  <button id="playAll">▶ Play all slowly</button>
+  <button id="stop" class="ghost">Stop</button>
+  <button id="clear" class="ghost">Clear marks</button>
+  <span id="voice" style="margin-left:10px;color:var(--dim);font-size:13px"></span>
+</div>
+
+<div id="body"></div>
+
+<h2>Send me this</h2>
+<textarea id="out" readonly></textarea>
+
+<script src="../app/data.js"></script>
+<script src="../app/register.js"></script>
+<script src="../app/stories.js"></script>
+<script src="../app/strokes.js"></script>
+<script src="../app/compose.js"></script>
+<script src="../app/engine.js"></script>
+<script>
+(function(){
+  var wrong = {};
+  var body = document.getElementById('body');
+  var out  = document.getElementById('out');
+
+  function report(){
+    var keys = Object.keys(wrong);
+    out.value = keys.length
+      ? 'These sound wrong (build ' + Engine.BUILD + '):\n' +
+        keys.map(function(k){ return '  ' + k + '  — app says "' + wrong[k] + '"'; }).join('\n')
+      : 'Nothing marked wrong yet (build ' + Engine.BUILD + ').';
+  }
+
+  function section(title, items){
+    var h = document.createElement('h2'); h.textContent = title; body.appendChild(h);
+    var g = document.createElement('div'); g.className = 'grid'; body.appendChild(g);
+    items.forEach(function(it){
+      var said = Engine.speakableRoman(Engine.romanFor(Engine.speakKey(it.ta)) || '');
+      var c = document.createElement('div'); c.className = 'cell';
+      c.innerHTML = '<div class="ta">' + it.ta + '</div>' +
+                    '<div class="see">you see: ' + it.see + '</div>' +
+                    '<div class="say">says: ' + said + '</div>' +
+                    '<div class="mark">✗ sounds wrong</div>';
+      c.onclick = function(e){
+        if (e.target.className === 'mark'){
+          if (wrong[it.ta]) { delete wrong[it.ta]; c.classList.remove('wrong'); }
+          else { wrong[it.ta] = said; c.classList.add('wrong'); }
+          report(); return;
+        }
+        Engine.speak(it.ta);
+      };
+      g.appendChild(c);
+    });
+    return items;
+  }
+
+  var all = [];
+  all = all.concat(section('The 12 vowels',
+    DATA.VOWELS.map(function(v){ return { ta:v.ch, see:v.r }; })));
+
+  all = all.concat(section('The 18 consonants',
+    DATA.CONS.map(function(c){ return { ta:c.ch, see:c.lab }; })));
+
+  var signs = [''].concat(DATA.SIGNS.map(function(s){ return s.s; })).concat([DATA.PULLI]);
+  all = all.concat(section('க with every mark',
+    signs.map(function(s){ return { ta:'க'+s, see:DATA.romanize('க'+s) }; })));
+
+  all = all.concat(section('Consonants with the dot (pulli)',
+    DATA.CONS.map(function(c){ return { ta:c.ch+DATA.PULLI, see:DATA.romanize(c.ch+DATA.PULLI) }; })));
+
+  all = all.concat(section('A few words',
+    ['அம்மா','அப்பா','தமிழ்','வணக்கம்','பணம்','மழை','வீடு','நன்றி']
+      .map(function(w){
+        var e = DATA.ALLWORDS.filter(function(x){ return x.w === w; })[0];
+        return { ta:w, see:(e ? e.s : DATA.romanizeWord(w)) };
+      })));
+
+  document.getElementById('voice').textContent =
+    'mode: ' + Engine.audioMode() + '  ·  build ' + Engine.BUILD;
+
+  var timer = null;
+  document.getElementById('playAll').onclick = function(){
+    var i = 0;
+    clearInterval(timer);
+    timer = setInterval(function(){
+      if (i >= all.length){ clearInterval(timer); return; }
+      Engine.speak(all[i++].ta);
+    }, 1500);
+  };
+  document.getElementById('stop').onclick = function(){
+    clearInterval(timer); speechSynthesis.cancel();
+  };
+  document.getElementById('clear').onclick = function(){
+    wrong = {};
+    [].forEach.call(document.querySelectorAll('.cell.wrong'), function(c){ c.classList.remove('wrong'); });
+    report();
+  };
+  report();
+})();
+</script>
+</body>
+</html>

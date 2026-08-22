@@ -5,7 +5,7 @@
 
 var Engine = (function () {
 
-  var BUILD = '2026-08-22.10';
+  var BUILD = '2026-08-22.11';
 
   /* ---------------- storage ---------------- */
   var KEY = 'tamilpath.v1';
@@ -313,10 +313,10 @@ var Engine = (function () {
   var ONSET = { k:'k', ng:'ng', ch:'ch', ny:'ny', T:'t', N:'n', th:'th',
                 n:'n', p:'p', m:'m', y:'y', r:'r', R:'r', l:'l', L:'l',
                 zh:'zh', v:'v', s:'s' };
-  var AFTER_CONS = { a:'uh', aa:'ah', i:'ih', ee:'ee', u:'oo', oo:'oo',
-                     e:'eh', ae:'ay', ai:'ye', o:'oh', oa:'oh', au:'ow' };
-  var ALONE      = { a:'uh', aa:'ah', i:'ih', ee:'ee', u:'ooh', oo:'ooh',
-                     e:'eh', ae:'ay', ai:'eye', o:'oh', oa:'oh', au:'ow' };
+  var AFTER_CONS = { a:'ah', aa:'aah', i:'ih', ee:'ee', u:'oo', oo:'ooh',
+                     e:'eh', ae:'ay', ai:'ye', o:'oh', oa:'ohh', au:'ow' };
+  var ALONE      = { a:'ah', aa:'aah', i:'ih', ee:'ee', u:'oo', oo:'ooh',
+                     e:'eh', ae:'ay', ai:'eye', o:'oh', oa:'ohh', au:'ow' };
 
   function respellSyllable(tok){
     var m = /^([a-zA-Z]*?)(aa|ee|oo|ae|ai|au|oa|a|i|u|e|o)$/.exec(tok);
