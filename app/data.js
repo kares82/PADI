@@ -223,7 +223,7 @@ var DATA = (function () {
       demo:[{g:'க',l:'ka'},{g:'கா',l:'kaa'},{g:'கி',l:'ki'},{g:'கு',l:'ku'},{g:'கே',l:'kae'},{g:'கோ',l:'koa'}] },
     { h:'So you learn 30 things, and get 247 letters.',
       p:'18 consonant shapes + 12 vowel signs. That is the whole writing system. Everything else is multiplication — and this app does the multiplication with you, one real word at a time.',
-      demo:[{g:'18',l:'shapes'},{op:'+'},{g:'12',l:'signs'},{op:'='},{g:'ஒரு மொழி',l:'a language'}] }
+      demo:[{g:'18',l:'shapes'},{op:'+'},{g:'12',l:'signs'},{op:'='},{g:'ஒரு மொழி',l:'oru mozhi · a language'}] }
   ];
 
   /* ---- the path ---------------------------------------- */
@@ -232,39 +232,39 @@ var DATA = (function () {
       sub:'5 rules. No memorising. Read this first.' },
 
     { id:'u1',  kind:'vowels',  icon:'அ',  title:'The 12 Vowels',
-      sub:'உயிர் எழுத்து — really just 6 sounds, short & long',
+      sub:'uyir ezhuthu — really just 6 sounds, each short and long',
       letters:['அ','ஆ','இ','ஈ','உ','ஊ','எ','ஏ','ஐ','ஒ','ஓ','ஔ'] },
 
     { id:'u2',  kind:'signs',   icon:'ா',  title:'The 12 Signs',
-      sub:'The multiplication rule — turn க into கா கி கீ கு …',
+      sub:'The multiplication rule — turn ka into kaa, ki, kee, ku …',
       words:W.u2 },
 
-    { id:'u3',  kind:'cons',    icon:'ம',  title:'ப · ம · ய',
-      sub:'The cup family → you will read அம்மா today',
+    { id:'u3',  kind:'cons',    icon:'ம',  title:'ப · ம · ய', roman:'pa · ma · ya',
+      sub:'The cup family — you will read am-maa (mother) today',
       letters:['ப','ம','ய'], words:W.u3 },
 
-    { id:'u4',  kind:'cons',    icon:'க',  title:'க · ச · த',
+    { id:'u4',  kind:'cons',    icon:'க',  title:'க · ச · த', roman:'ka · cha · tha',
       sub:'The three commonest stops',
       letters:['க','ச','த'], words:W.u4 },
 
-    { id:'u5',  kind:'cons',    icon:'ந',  title:'ந · ன · ண',
-      sub:'The three N sounds — teeth, ridge, curled',
+    { id:'u5',  kind:'cons',    icon:'ந',  title:'ந · ன · ண', roman:'na · na · na',
+      sub:'Three different N sounds — teeth, ridge, curled',
       letters:['ந','ன','ண'], words:W.u5 },
 
-    { id:'u6',  kind:'cons',    icon:'ழ',  title:'ல · ள · ழ',
-      sub:'The three L sounds — including the famous ழ',
+    { id:'u6',  kind:'cons',    icon:'ழ',  title:'ல · ள · ழ', roman:'la · la · zha',
+      sub:'Three different L sounds — including the zha in “Tamizh”',
       letters:['ல','ள','ழ'], words:W.u6 },
 
-    { id:'u7',  kind:'cons',    icon:'ர',  title:'ர · ற · வ · ட',
-      sub:'Two R sounds, plus வ and ட',
+    { id:'u7',  kind:'cons',    icon:'ர',  title:'ர · ற · வ · ட', roman:'ra · ra · va · ta',
+      sub:'Two R sounds — soft and hard — plus va and ta',
       letters:['ர','ற','வ','ட'], words:W.u7 },
 
-    { id:'u8',  kind:'cons',    icon:'ங',  title:'ங · ஞ',
+    { id:'u8',  kind:'cons',    icon:'ங',  title:'ங · ஞ', roman:'nga · nya',
       sub:'The last two. Rare, easy, and then you are done.',
       letters:['ங','ஞ'], words:W.u8 },
 
     { id:'u9',  kind:'clinic',  icon:'⚖',  title:'Look-alike Clinic',
-      sub:'ர/ற · ல/ள/ழ · ன/ண · த/ட — the pairs that trip everyone',
+      sub:'The look-alike letters that trip absolutely everyone up',
       pairs:PAIRS },
 
     { id:'u10', kind:'read',    icon:'📖', title:'Real Words',

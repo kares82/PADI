@@ -209,8 +209,12 @@ var REGISTER = (function () {
   function say(entry, variety){ return entry[variety === 'LK' ? 'sLK' : 'sIN']; }
 
   var VARIETIES = [
-    { id:'IN', label:'Indian Tamil',      note:'Tamil Nadu, Puducherry, and most of the Malaysian and Singaporean diaspora', eg:'நான் போறேன்' },
-    { id:'LK', label:'Sri Lankan Tamil',  note:'Jaffna and the Sri Lankan diaspora in Canada, the UK and Australia',        eg:'நான் போறன்' }
+    { id:'IN', label:'Indian Tamil',
+      note:'Tamil Nadu, Puducherry, and most of the Malaysian and Singaporean diaspora',
+      eg:'நான் போறேன்', egR:'naan poa-Raen' },
+    { id:'LK', label:'Sri Lankan Tamil',
+      note:'Jaffna and the Sri Lankan diaspora in Canada, the UK and Australia',
+      eg:'நான் போறன்', egR:'naan poa-Ran' }
   ];
 
   return {

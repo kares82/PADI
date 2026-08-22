@@ -856,7 +856,10 @@ function renderVarietyPicker(first){
   back.hidden = !first ? false : true;
 
   app.appendChild(h('div',{class:'hero'},[
-    h('div',{class:'big', lang:'ta', text:'\u0baa\u0b9f\u0bbf'}),
+    h('div',{style:'display:flex;align-items:baseline;gap:10px;flex-wrap:wrap'},[
+      h('div',{class:'big', lang:'ta', text:'\u0baa\u0b9f\u0bbf'}),
+      h('div',{style:'font-size:17px;font-weight:800;color:var(--gold-deep)', text:'\u201cpadi\u201d \u2014 it means read'})
+    ]),
     h('div',{style:'font-size:19px;font-weight:800;margin-top:6px', text:'You already speak it.'}),
     h('p',{class:'sub', style:'margin-top:6px', text:'One question first, so the app can show you your own Tamil rather than somebody else\u2019s.'})
   ]));
@@ -877,8 +880,10 @@ function renderVarietyPicker(first){
       ]),
       h('div',{class:'eg'},[
         h('span',{class:'tag', text:'you would say'}),
-        h('div',{class:'glyph', style:'font-size:30px;font-weight:600;margin-top:2px', lang:'ta', text:v.eg}),
-        h('div',{class:'tag', style:'margin-top:2px', text:'\u201cI am going\u201d'})
+        // romanised first — nobody can read the script yet, that is the point
+        h('div',{style:'font-size:27px;font-weight:800;color:var(--gold-deep);margin-top:2px;letter-spacing:.3px', text:v.egR}),
+        h('div',{class:'glyph', style:'font-size:22px;font-weight:600;opacity:.75;margin-top:2px', lang:'ta', text:v.eg}),
+        h('div',{class:'tag', style:'margin-top:4px', text:'\u201cI am going\u201d'})
       ]),
       h('small',{style:'display:block;color:var(--muted);font-size:13.5px;font-weight:600;margin-top:10px', text:v.note})
     ]));
@@ -907,7 +912,8 @@ function renderHome(){
 
   app.appendChild(h('div',{class:'hero'},[
     h('div',{class:'big', lang:'ta', text:'வணக்கம்'}),
-    h('div',{class:'sub', style:'margin-top:2px', text:'You already speak it. 10 minutes a day is enough.'}),
+    h('div',{style:'font-size:14px;font-weight:800;color:var(--gold-deep);letter-spacing:.4px', text:'va-Nak-kam \u00b7 hello'}),
+    h('div',{class:'sub', style:'margin-top:6px', text:'You already speak it. 10 minutes a day is enough.'}),
     h('div',{class:'streak'},[
       h('div',{},[ h('b',{text:String(Engine.S.streak.days||0)}), 'day streak' ]),
       h('div',{},[ h('b',{text:String(known)}), 'letters seen' ]),
@@ -933,7 +939,11 @@ function renderHome(){
       go('#/unit/'+u.id);
     }},[
       h('div',{class:'bubble', lang:'ta'},[ st.done ? '✓' : u.icon ]),
-      h('div',{class:'t'},[ h('b',{text:u.title}), h('small',{text:u.sub}) ]),
+      h('div',{class:'t'},[
+        h('b',{},[ h('span',{lang:'ta', text:u.title}),
+                   u.roman ? h('span',{class:'rom', text:u.roman}) : null ]),
+        h('small',{text:u.sub})
+      ]),
       h('div',{class:'chev', text:'›'})
     ]);
     app.appendChild(b);
@@ -984,7 +994,8 @@ function renderUnit(id){
   var st = unitState(idx);
   app.appendChild(h('div',{class:'card center'},[
     h('div',{class:'bubble', style:'margin:0 auto 12px;width:70px;height:70px;font-size:34px;border-radius:22px;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--ta)'},[u.icon]),
-    h('h2',{class:'h1', text:u.title}),
+    h('h2',{class:'h1', lang:'ta', text:u.title}),
+    u.roman ? h('div',{style:'font-size:17px;font-weight:800;color:var(--gold-deep);margin-bottom:4px', text:u.roman}) : null,
     h('p',{class:'sub', text:u.sub}),
     st.done ? h('p',{class:'pill', style:'margin-top:12px', text:'✓ completed — repeat any time'}) : null
   ]));
