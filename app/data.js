@@ -218,11 +218,11 @@ var DATA = (function () {
 
     { viz:'oneMark', base:'\u0b95', sign:'\u0bbe', from:'ka', to:'kaa',
       h:'One small mark changes the sound.',
-      p:'Look at the gold part. That is the only thing I added \u2014 one stroke on the right. \u201cka\u201d has become \u201ckaa\u201d. Just held a bit longer.\n\nThe dark part is your original letter. It is still sitting right there, untouched. Tap the picture to take the mark off and put it back.' },
+      p:'Look at the coloured part. That is the only thing I added \u2014 one stroke on the right. \u201cka\u201d has become \u201ckaa\u201d. Just held a bit longer.\n\nThe plain part is your original letter. It is still sitting right there, untouched. Tap the picture to take the mark off and put it back.' },
 
     { viz:'twelve', base:'\u0b95',
       h:'There are twelve marks. That is the whole system.',
-      p:'Same letter every time. Only the gold changes.\n\nThis is the row that scares people in every Tamil book, because it is printed in one colour and looks like twelve new letters to memorise. It is not. It is one letter wearing twelve different hats.' },
+      p:'Same letter every time. Only the coloured part changes.\n\nThis is the row that scares people in every Tamil book, because it is printed in one colour and looks like twelve new letters to memorise. It is not. It is one letter wearing twelve different hats.' },
 
     { viz:'dot', base:'\u0b95',
       h:'A dot on top switches the vowel off.',

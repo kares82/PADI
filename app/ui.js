@@ -1154,7 +1154,7 @@ function renderHome(){
   app.appendChild(h('button',{class:'unit', onclick:function(){ go('#/themes'); }},[
     h('div',{class:'bubble'},['🎨']),
     h('div',{class:'t'},[ h('b',{text:'Colours'}),
-      h('small',{text:'Five themes — currently ' + (THEMES.filter(function(x){return x.id===(Engine.S.settings.theme||'ink');})[0]||{t:'Ink & Paper'}).t }) ]),
+      h('small',{text:'Five themes — currently ' + (THEMES.filter(function(x){return x.id===(Engine.S.settings.theme||'mayil');})[0]||{t:'Mayil'}).t }) ]),
     h('div',{class:'chev', text:'›'})
   ]));
   app.appendChild(h('button',{class:'unit', onclick:function(){ go('#/stories'); }},[
@@ -1237,11 +1237,16 @@ function renderUnit(id){
 }
 
 var THEMES = [
-  { id:'ink',      t:'Ink & Paper', ta:'மை', tar:'mai · ink',        note:'Crisp white, near-black type, indigo. Maximum contrast — the easiest to read.' },
-  { id:'kolam',    t:'Kolam',       ta:'கோலம்', tar:'koa-lam', note:'Midnight blue and saffron, after the patterns drawn in rice flour at dawn.' },
-  { id:'mayil',    t:'Mayil',       ta:'மயில்', tar:'ma-yil · peacock', note:'Deep peacock teal. The state bird, and the colour of the feather.' },
-  { id:'malligai', t:'Malligai',    ta:'மல்லிகை', tar:'mal-li-gai · jasmine', note:'White and garden green. Light and calm.' },
-  { id:'suvadi',   t:'Suvadi',      ta:'சுவடி', tar:'su-va-di · palm leaf', note:'The original warm parchment, if you ever want it back.' }
+  { id:'mayil',    t:'Mayil',       ta:'\u0bae\u0baf\u0bbf\u0bb2\u0bcd', tar:'ma-yil \u00b7 peacock',
+    note:'Peacock green, kept soft on purpose. No pure white, no pure black, nothing at full strength \u2014 the easiest of the five to sit with for a long time, and the kindest to young eyes.' },
+  { id:'malligai', t:'Malligai',    ta:'\u0bae\u0bb2\u0bcd\u0bb2\u0bbf\u0b95\u0bc8', tar:'mal-li-gai \u00b7 jasmine',
+    note:'Garden green on white. Bright and fresh rather than restful.' },
+  { id:'kolam',    t:'Kolam',       ta:'\u0b95\u0bcb\u0bb2\u0bae\u0bcd', tar:'koa-lam',
+    note:'Midnight blue and saffron, after the patterns drawn in rice flour at dawn.' },
+  { id:'ink',      t:'Ink & Paper', ta:'\u0bae\u0bc8', tar:'mai \u00b7 ink',
+    note:'Near-black type and indigo at maximum contrast. The sharpest to read, the harshest to stare at.' },
+  { id:'suvadi',   t:'Suvadi',      ta:'\u0b9a\u0bc1\u0bb5\u0b9f\u0bbf', tar:'su-va-di \u00b7 palm leaf',
+    note:'Warm parchment brown, the app\u2019s original look.' }
 ];
 
 function renderThemes(){
@@ -1253,7 +1258,7 @@ function renderThemes(){
     text:'Tap one to try it. It changes instantly and everywhere — including the coloured letters in Unit 0. Each also has its own dark version, which follows your phone.'}));
 
   THEMES.forEach(function(th){
-    var on = (Engine.S.settings.theme || 'ink') === th.id;
+    var on = (Engine.S.settings.theme || 'mayil') === th.id;
     var sw = h('div',{class:'swatches'});
     // paint the swatches from the theme's own tokens by borrowing a probe node
     var probe = document.createElement('div');
@@ -1396,7 +1401,7 @@ function renderStory(id){
   ]));
 
   app.appendChild(h('div',{class:'note', style:'margin-top:12px'},[
-    h('b',{text:'Bright letters are ones you already know. '}),
+    h('b',{text:'Letters in full colour are ones you already know. '}),
     'The faded ones are still ahead of you. Come back after the next unit and watch the page light up. Tap any word to hear it.'
   ]));
 

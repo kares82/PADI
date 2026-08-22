@@ -21,8 +21,8 @@
    written to <html data-theme> before first paint.
    ============================================================ */
 
-/* ---------- Ink & Paper (default) ---------- */
-:root, :root[data-theme="ink"]{
+/* ---------- Ink & Paper ---------- */
+:root[data-theme="ink"]{
   --paper:#FFFFFF; --paper-2:#F1F4F9; --card:#FFFFFF;
   --ink:#0F172A; --ink-2:#475569; --muted:#7C8CA3; --line:#E2E8F0;
   --gold:#4F46E5; --gold-deep:#4338CA; --gold-shade:#3730A3; --on-gold:#FFFFFF;
@@ -30,7 +30,7 @@
   --red:#DC2626; --red-soft:#FEF2F2; --red-line:#F6C6C2;
   --hero-a:#EEF2FF; --hero-b:#E0E7FF; --hero-line:#C7D2FE;
 }
-@media (prefers-color-scheme: dark){ :root, :root[data-theme="ink"]{
+@media (prefers-color-scheme: dark){ :root[data-theme="ink"]{
   --paper:#0B1020; --paper-2:#161C2D; --card:#131A2A;
   --ink:#E9EEF7; --ink-2:#AFBACB; --muted:#78889F; --line:#262F42;
   --gold:#6366F1; --gold-deep:#A5B4FC; --gold-shade:#4338CA; --on-gold:#FFFFFF;
@@ -59,23 +59,27 @@
   --shadow:0 2px 0 rgba(0,0,0,.35), 0 10px 28px -18px #000;
 } }
 
-/* ---------- Mayil: peacock ---------- */
-:root[data-theme="mayil"]{
-  --paper:#F5FCFC; --paper-2:#E3F1F2; --card:#FFFFFF;
-  --ink:#062B31; --ink-2:#3A6169; --muted:#79999F; --line:#CDE5E7;
-  --gold:#0E7C86; --gold-deep:#0A5B63; --gold-shade:#084A51; --on-gold:#FFFFFF;
-  --teal:#15803D; --teal-shade:#166534; --teal-soft:#ECFDF3; --teal-line:#A3E0BA;
-  --red:#C2410C; --red-soft:#FFF4ED; --red-line:#F5C6A5;
-  --hero-a:#E6F7F8; --hero-b:#D2EFF1; --hero-line:#AEDFE3;
+/* ---------- Mayil: peacock (default) ----------
+   Tuned for long sittings and young eyes: no pure white, no pure
+   black, nothing fully saturated. Contrast stays above WCAG AA for
+   body text but stops well short of the glare of black-on-white. */
+:root, :root[data-theme="mayil"]{
+  --paper:#F1F6F3; --paper-2:#E3EDE8; --card:#FBFDFC;
+  --ink:#15302A; --ink-2:#456158; --muted:#7B958C; --line:#D3E2DB;
+  --gold:#12766B; --gold-deep:#0E5C53; --gold-shade:#0A4740; --on-gold:#FFFFFF;
+  --teal:#4F8F3F; --teal-shade:#3E7231; --teal-soft:#EAF4E6; --teal-line:#BEDCB2;
+  --red:#B4553F; --red-soft:#FAEFEB; --red-line:#E7C3B6;
+  --hero-a:#E6F2EC; --hero-b:#D6EAE1; --hero-line:#BCDCD0;
+  --shadow:0 2px 0 rgba(21,48,42,.04), 0 10px 28px -18px rgba(21,48,42,.35);
 }
-@media (prefers-color-scheme: dark){ :root[data-theme="mayil"]{
-  --paper:#041519; --paper-2:#0A252B; --card:#071D22;
-  --ink:#E4F5F6; --ink-2:#A6C8CC; --muted:#6D9198; --line:#123840;
-  --gold:#2DD4BF; --gold-deep:#5EEAD4; --gold-shade:#14B8A6; --on-gold:#04211E;
-  --teal:#4ADE80; --teal-shade:#22C55E; --teal-soft:#062A16; --teal-line:#14532D;
-  --red:#FB923C; --red-soft:#2A1408; --red-line:#5A2C10;
-  --hero-a:#0A2A30; --hero-b:#061D22; --hero-line:#154149;
-  --shadow:0 2px 0 rgba(0,0,0,.35), 0 10px 28px -18px #000;
+@media (prefers-color-scheme: dark){ :root, :root[data-theme="mayil"]{
+  --paper:#0E1A18; --paper-2:#162523; --card:#132220;
+  --ink:#DCE9E4; --ink-2:#A6BFB7; --muted:#6F8B83; --line:#22352F;
+  --gold:#4FB79F; --gold-deep:#83D6C0; --gold-shade:#37866F; --on-gold:#07201B;
+  --teal:#7CC46B; --teal-shade:#5FA451; --teal-soft:#132A18; --teal-line:#2A5030;
+  --red:#E08A72; --red-soft:#2A1712; --red-line:#4A2A20;
+  --hero-a:#16302B; --hero-b:#0F231F; --hero-line:#24443C;
+  --shadow:0 2px 0 rgba(0,0,0,.28), 0 10px 28px -18px #000;
 } }
 
 /* ---------- Malligai: jasmine ---------- */

@@ -12,7 +12,7 @@ var Engine = (function () {
     units: {},      // unitId -> {done:true, best:n}
     streak: { last:null, days:0 },
     stats: { answers:0, correct:0 },
-    settings: { sound:true, variety:null, hideEnglish:false, theme:'ink' },
+    settings: { sound:true, variety:null, hideEnglish:false, theme:'mayil' },
     game: { xp:0, todayXp:0, day:null, goal:60, seenLevel:0, read:{} }
   };
 
@@ -33,8 +33,8 @@ var Engine = (function () {
     if(!S.srs) S.srs={}; if(!S.units) S.units={};
     if(!S.streak) S.streak={last:null,days:0};
     if(!S.stats) S.stats={answers:0,correct:0};
-    if(!S.settings) S.settings={sound:true,variety:null,hideEnglish:false,theme:'ink'};
-    if(!S.settings.theme) S.settings.theme='ink';
+    if(!S.settings) S.settings={sound:true,variety:null,hideEnglish:false,theme:'mayil'};
+    if(!S.settings.theme) S.settings.theme='mayil';
     if(!S.game) S.game={xp:0,todayXp:0,day:null,goal:60,seenLevel:0,read:{}};
     if(!S.game.read) S.game.read={};
     if(S.settings.variety===undefined) S.settings.variety=null;
@@ -226,7 +226,7 @@ var Engine = (function () {
   }
   function applyTheme(name){
     if (name) S.settings.theme = name;
-    document.documentElement.setAttribute('data-theme', S.settings.theme || 'ink');
+    document.documentElement.setAttribute('data-theme', S.settings.theme || 'mayil');
     if (name) save();
   }
 

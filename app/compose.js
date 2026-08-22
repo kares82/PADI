@@ -34,11 +34,11 @@ var Compose = (function () {
   /* the base letter takes the page's ink, the added mark the accent,
      so the picture recolours itself with whatever theme is chosen */
   function colours(){
-    return { base: rgb(cssVar('--ink'), [15,23,42]),
-             mark: rgb(cssVar('--gold-deep'), [67,56,202]) };
+    return { base: rgb(cssVar('--ink'), [21,48,42]),
+             mark: rgb(cssVar('--gold-deep'), [14,92,83]) };
   }
   function themeKey(){
-    return (document.documentElement.getAttribute('data-theme') || 'ink') +
+    return (document.documentElement.getAttribute('data-theme') || 'mayil') +
            (matchMedia('(prefers-color-scheme: dark)').matches ? 'd' : 'l');
   }
 
