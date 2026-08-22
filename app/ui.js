@@ -30,6 +30,20 @@ function ta(txt, cls){ return h('span',{class:'glyph '+(cls||''), lang:'ta', tex
 function clear(){ app.innerHTML=''; }
 function go(hash){ location.hash = hash; }
 
+/* Back used to call history.back(). Entering a lesson never pushes a
+   history entry - it just re-renders - so going back from question
+   three of a lesson threw you out to whichever screen you were on
+   before, usually the path. Every screen now names where back should
+   go, and a lesson steps through its own cards. */
+var backAction = null;
+function setBack(fn){
+  backAction = fn || null;
+  back.hidden = !backAction;
+}
+function backTo(hash){
+  return function(){ if (location.hash === hash) route(); else location.hash = hash; };
+}
+
 /* speaker button */
 function spk(text, big){
   return h('button',{class:'speaker', 'aria-label':'Play sound', style: big?'font-size:28px':'',
@@ -310,8 +324,23 @@ function buildLesson(unit){
 var L = null;
 var lessonActive = false;
 
+/* A phone's own back button would walk out of a lesson for the same
+   reason the in-app one used to: no history entry belongs to the
+   lesson. Park a spare entry on the SAME hash when one starts - popping
+   it fires popstate without a hashchange, so it can be turned into a
+   step backwards instead of an exit, and routing is untouched. */
+function armLessonHistory(){
+  try { history.pushState({ padiLesson:1 }, '', location.hash || '#/'); } catch (e){}
+}
+window.addEventListener('popstate', function(){
+  if (!lessonActive) return;
+  stepBack();
+  if (lessonActive) armLessonHistory();
+});
+
 function startLesson(unit){
   lessonActive = true;
+  armLessonHistory();
   L = { unit:unit, steps:buildLesson(unit), i:0, right:0, wrong:0, redo:[], redoRounds:0 };
   Engine.touchStreak();
   drawStep();
@@ -328,6 +357,7 @@ function startReview(){
     return randomEx(it, p.length >= 4 ? p : pool);
   });
   lessonActive = true;
+  armLessonHistory();
   L = { unit:{ id:'review', title:'Review', kind:'review' }, steps:steps, i:0, right:0, wrong:0, redo:[], redoRounds:0 };
   Engine.touchStreak();
   drawStep();
@@ -374,6 +404,7 @@ function finishLesson(){
     Engine.save();
   }
   clear();
+  setBack(backTo('#/'));
   var total = L.right + L.wrong;
   var pct = total ? Math.round(L.right/total*100) : 100;
   Engine.award(50);
@@ -430,8 +461,18 @@ function progressBar(){
   return h('div',{class:'progress-top'},[ h('i',{style:'width:'+pct+'%'}) ]);
 }
 
+/* One card back, and out of the lesson from the first card. */
+function stepBack(){
+  if (!L){ return backTo('#/')(); }
+  if (L.i > 0){ L.i--; drawStep(); return; }
+  var id = L.unit && L.unit.id;
+  lessonActive = false; L = null;
+  backTo(!id || id === 'review' ? '#/review' : '#/unit/' + id)();
+}
+
 function drawStep(){
   clear();
+  setBack(stepBack);          // always reachable, reviews included
   app.appendChild(progressBar());
   var s = L.steps[L.i];
   if (!s) return finishLesson();
@@ -1033,7 +1074,7 @@ function unitState(idx){
 function renderVarietyPicker(first){
   clear();
   top.textContent = first ? 'Welcome' : 'Your Tamil';
-  back.hidden = !first ? false : true;
+  setBack(first ? null : backTo('#/'));
 
   app.appendChild(h('div',{class:'hero'},[
     h('div',{style:'display:flex;align-items:baseline;gap:10px;flex-wrap:wrap'},[
@@ -1083,7 +1124,7 @@ function renderHome(){
   if (!Engine.S.settings.variety) return renderVarietyPicker(true);
   clear();
   top.textContent = 'Padi Tamil';
-  back.hidden = true;
+  setBack(null);
 
   var doneCount = DATA.UNITS.filter(function(u){ return Engine.S.units[u.id] && Engine.S.units[u.id].done; }).length;
   var due = Engine.dueItems().length;
@@ -1201,7 +1242,7 @@ function renderUnit(id){
   if (!u) return renderHome();
   clear();
   top.textContent = u.title;
-  back.hidden = false;
+  setBack(backTo('#/'));
 
   var st = unitState(idx);
   app.appendChild(h('div',{class:'card center'},[
@@ -1267,7 +1308,7 @@ var THEMES = [
 function renderThemes(){
   clear();
   top.textContent = 'Colours';
-  back.hidden = false;
+  setBack(backTo('#/'));
 
   app.appendChild(h('p',{class:'sub', style:'margin-bottom:14px',
     text:'Tap one to try it. It changes instantly and everywhere — including the coloured letters in Unit 0.'}));
@@ -1329,7 +1370,7 @@ function renderThemes(){
 function renderStories(){
   clear();
   top.textContent = 'Stories';
-  back.hidden = true;
+  setBack(null);
 
   app.appendChild(h('div',{class:'hero'},[
     h('div',{class:'big', lang:'ta', text:'\u0b95\u0ba4\u0bc8'}),
@@ -1394,7 +1435,7 @@ function renderStory(id){
 
   clear();
   top.textContent = f.en;
-  back.hidden = false;
+  setBack(backTo('#/stories'));
   var hideEn = Engine.S.settings.hideEnglish;
 
   app.appendChild(h('div',{class:'card center'},[
@@ -1450,7 +1491,7 @@ function renderStory(id){
 function renderGrid(){
   clear();
   top.textContent = 'The 247 chart';
-  back.hidden = false;
+  setBack(null);
 
   app.appendChild(h('p',{class:'sub', style:'margin-bottom:12px'},[
     'Down the side: the 18 consonants. Across the top: the 12 vowels. Every cell is just the two glued together. ',
@@ -1523,7 +1564,7 @@ function renderGrid(){
 function renderReview(){
   clear();
   top.textContent = 'Review';
-  back.hidden = true;
+  setBack(null);
   var due = Engine.dueItems();
   var known = Engine.learnedIds().length;
 
@@ -1572,7 +1613,7 @@ function renderReview(){
 function renderWrite(q){
   clear();
   top.textContent = 'Writing pad';
-  back.hidden = true;
+  setBack(null);
 
   var current = (q && q.g) || 'அ';
   var size = Math.min(340, Math.max(230, window.innerWidth - 80));
@@ -1658,6 +1699,7 @@ function route(){
     });
   }
   var parts = path.split('/').filter(Boolean);
+  setBack(null);   // each screen re-declares its own
 
   if (!parts.length){ curTab='/'; renderHome(); }
   else if (parts[0] === 'unit'){ curTab='/'; renderUnit(parts[1]); }
@@ -1672,8 +1714,7 @@ function route(){
 }
 
 back.addEventListener('click', function(){
-  if (L && L.i < L.steps.length && location.hash.indexOf('/unit/') < 0){ }
-  history.length > 1 ? history.back() : go('#/');
+  if (backAction) backAction(); else go('#/');
 });
 sndBt.addEventListener('click', function(){
   Engine.S.settings.sound = !Engine.S.settings.sound;
