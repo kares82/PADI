@@ -1139,14 +1139,23 @@ function renderHome(){
     app.appendChild(b);
   });
 
-  if (!Engine.hasTamilVoice() && !Engine.hasClips()){
+  var mode = Engine.audioMode();
+  if (mode !== 'clips' && mode !== 'tamil'){
     var warn = h('div',{class:'note', style:'margin-top:14px'},[
-      h('b',{text:'No Tamil voice found on this device. '}),
-      'Everything still works — you just will not hear the letters spoken. On Android install a Tamil voice under Settings › Language › Text-to-speech. On iPhone, Settings › Accessibility › Spoken Content › Voices › Tamil. On Windows, Settings › Time & Language › Speech › Add voices › Tamil — then run tools\make-audio.ps1 once to bake the sounds into the app permanently.'
+      h('b',{text: mode === 'approx'
+        ? 'You are hearing an approximation. '
+        : 'No sound on this device. '}),
+      mode === 'approx'
+        ? 'This device has no Tamil voice, so the app is reading its own spelled-out pronunciation aloud in an English voice. It gets the shape of a word right but cannot do the curled letters or ழ properly \u2014 trust the mouth hints in the lessons over what you hear.'
+        : 'This device has no speech voices at all, so nothing can be spoken.',
+      h('br'), h('br'),
+      'For real Tamil audio: on Android install a Tamil voice under Settings \u203a Language \u203a Text-to-speech; on iPhone under Settings \u203a Accessibility \u203a Spoken Content \u203a Voices; on Windows see the README \u2014 one command adds a Tamil voice, and tools/make-audio-google.ps1 bakes proper recordings into the app for everyone.'
     ]);
     app.appendChild(warn);
-    // the recordings manifest loads asynchronously; drop the notice if it turns up
-    setTimeout(function(){ if (Engine.hasClips() || Engine.hasTamilVoice()) warn.remove(); }, 1200);
+    setTimeout(function(){
+      var m2 = Engine.audioMode();
+      if (m2 === 'clips' || m2 === 'tamil') warn.remove();
+    }, 1200);
   }
 
   app.appendChild(h('div',{class:'h2', text:'More'}));

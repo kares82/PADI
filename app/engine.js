@@ -5,7 +5,7 @@
 
 var Engine = (function () {
 
-  var BUILD = '2026-08-22.8';
+  var BUILD = '2026-08-22.9';
 
   /* ---------------- storage ---------------- */
   var KEY = 'tamilpath.v1';
@@ -247,7 +247,69 @@ var Engine = (function () {
 
   function hasClips(){ return !!clips; }
 
-  var voice = null, voicesReady = false;
+  var voice = null, voicesReady = false, anyVoice = null;
+
+  /* ---- last resort: say the romanisation with whatever voice exists ----
+     A laptop with no Tamil voice installed produces complete silence,
+     because the browser will not synthesise ta-IN without one. Reading
+     the app's own romanisation aloud in an English voice is a rough
+     approximation - it cannot do the retroflex letters or zh - but it
+     is immediate, free, works on every device, and beats nothing at
+     all while proper audio is being sorted out. */
+  var sayMap = null;
+  function buildSayMap(){
+    var m = {};
+    function put(ta, ro){
+      if (!ta || !ro) return;
+      var k = speakKey(ta);
+      if (k && !m[k]) m[k] = ro;
+    }
+    try {
+      DATA.VOWELS.forEach(function(v){ put(v.ch, v.r); });
+      DATA.CONS.forEach(function(c){ put(c.ch, String(c.lab).split(' ')[0]); });
+      var signs = [''].concat([DATA.PULLI]).concat(DATA.SIGNS.map(function(x){ return x.s; }));
+      DATA.CONS.forEach(function(c){
+        signs.forEach(function(sg){ put(c.ch + sg, DATA.romanize(c.ch + sg)); });
+      });
+      DATA.ALLWORDS.forEach(function(w){ put(w.w, w.s); });
+      if (typeof REGISTER !== 'undefined'){
+        REGISTER.BRIDGE.forEach(function(b){ put(b.f,b.sf); put(b.IN,b.sIN); put(b.LK,b.sLK); });
+        REGISTER.NEWSVOCAB.forEach(function(w){ put(w.w, w.s); });
+        REGISTER.HEADLINES.forEach(function(w){ put(w.w, w.s); });
+        REGISTER.NEWSPAT.forEach(function(pt){ pt.ex.forEach(function(e){ put(e.f, e.s); }); });
+      }
+      if (typeof STORIES !== 'undefined'){
+        STORIES.FABLES.forEach(function(f){
+          f.lines.forEach(function(l){ put(l.t, l.r); });
+          put(f.moral.t, f.moral.r);
+        });
+        STORIES.AATHICHUDI.forEach(function(a){ put(a.t, a.r); });
+        STORIES.KURALS.forEach(function(k){ put(k.a + ' ' + k.b, k.ar + ' ' + k.br); });
+      }
+    } catch (e){}
+    return m;
+  }
+  function romanFor(key){
+    if (!sayMap) sayMap = buildSayMap();
+    if (sayMap[key]) return sayMap[key];
+    // not a listed phrase - build it from the letters themselves
+    try {
+      var out = key.split(' ').map(function(word){
+        return DATA.clusters(word).map(DATA.romanize).join('');
+      }).join(' ');
+      return /[a-zA-Z]/.test(out) ? out : null;
+    } catch (e){ return null; }
+  }
+  /* strip the diacritic-ish capitals: an English engine reading "paNam"
+     can spell the capital out, and "pa-nam" is closer anyway */
+  function speakableRoman(r){ return String(r).toLowerCase(); }
+
+  function audioMode(){
+    if (clips) return 'clips';
+    if (voice) return 'tamil';
+    if (anyVoice) return 'approx';
+    return 'none';
+  }
 
   function pickVoice(){
     if (!('speechSynthesis' in window)) return null;
@@ -257,10 +319,20 @@ var Engine = (function () {
     for (i=0;i<vs.length;i++) if (/tamil/i.test(vs[i].name)) return vs[i];
     return null;
   }
+  function pickAny(){
+    if (!('speechSynthesis' in window)) return null;
+    var vs = speechSynthesis.getVoices() || [];
+    var i;
+    for (i=0;i<vs.length;i++) if (/^en\b|^en-/i.test(vs[i].lang) && vs[i].localService) return vs[i];
+    for (i=0;i<vs.length;i++) if (/^en\b|^en-/i.test(vs[i].lang)) return vs[i];
+    return vs[0] || null;
+  }
   function initVoices(){
     if (!('speechSynthesis' in window)) return;
-    voice = pickVoice(); voicesReady = !!voice;
-    speechSynthesis.onvoiceschanged = function(){ voice = pickVoice(); voicesReady = !!voice; };
+    voice = pickVoice(); anyVoice = pickAny(); voicesReady = !!voice;
+    speechSynthesis.onvoiceschanged = function(){
+      voice = pickVoice(); anyVoice = pickAny(); voicesReady = !!voice;
+    };
   }
   function hasTamilVoice(){ return !!voice; }
 
@@ -271,10 +343,21 @@ var Engine = (function () {
     if (playClip(key)) return true;
     if (!('speechSynthesis' in window)) return false;
     try{
-      var u = new SpeechSynthesisUtterance(key);
-      if (voice) u.voice = voice;
-      u.lang = 'ta-IN';
-      u.rate = rate || 0.72;
+      var u;
+      if (voice){
+        u = new SpeechSynthesisUtterance(key);
+        u.voice = voice;
+        u.lang  = 'ta-IN';
+        u.rate  = rate || 0.72;
+      } else {
+        // no Tamil voice on this device - read the romanisation instead
+        var ro = romanFor(key);
+        if (!ro || !anyVoice) return false;
+        u = new SpeechSynthesisUtterance(speakableRoman(ro));
+        u.voice = anyVoice;
+        u.lang  = anyVoice.lang || 'en-GB';
+        u.rate  = rate ? rate * 0.9 : 0.62;   // slower: it is an approximation
+      }
       u.pitch = 1;
       speechSynthesis.cancel();
       speechSynthesis.speak(u);
@@ -592,7 +675,8 @@ var Engine = (function () {
     BUILD:BUILD, applyTheme:applyTheme, applyScheme:applyScheme, isDark:isDark, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
     checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
     mastery:mastery, GAPS:GAPS,
-    speak:speak, speakKey:speakKey, hasTamilVoice:hasTamilVoice, hasClips:hasClips, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
+    speak:speak, speakKey:speakKey, hasTamilVoice:hasTamilVoice, hasClips:hasClips,
+    audioMode:audioMode, romanFor:romanFor, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
     Trace:Trace, shuffle:shuffle, sample:sample, pick:pick, toast:toast
   };
 })();
