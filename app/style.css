@@ -22,38 +22,38 @@
    ============================================================ */
 
 /* ---------- Ink & Paper ---------- */
-:root[data-theme="ink"]{
+:root[data-theme="ink"], [data-theme="ink"]{
   --paper:#FFFFFF; --paper-2:#F1F4F9; --card:#FFFFFF;
   --ink:#0F172A; --ink-2:#475569; --muted:#7C8CA3; --line:#E2E8F0;
   --gold:#4F46E5; --gold-deep:#4338CA; --gold-shade:#3730A3; --on-gold:#FFFFFF;
-  --teal:#047857; --teal-shade:#065F46; --teal-soft:#ECFDF5; --teal-line:#A7E3C8;
-  --red:#DC2626; --red-soft:#FEF2F2; --red-line:#F6C6C2;
+  --teal:#047857; --teal-shade:#065F46; --teal-soft:#ECFDF5; --teal-line:#A7E3C8; --on-teal:#FFFFFF;
+  --red:#D32222; --red-soft:#FEF2F2; --red-line:#F6C6C2;
   --hero-a:#EEF2FF; --hero-b:#E0E7FF; --hero-line:#C7D2FE;
 }
-@media (prefers-color-scheme: dark){ :root[data-theme="ink"]{
+@media (prefers-color-scheme: dark){ :root[data-theme="ink"], [data-theme="ink"]{
   --paper:#0B1020; --paper-2:#161C2D; --card:#131A2A;
   --ink:#E9EEF7; --ink-2:#AFBACB; --muted:#78889F; --line:#262F42;
-  --gold:#6366F1; --gold-deep:#A5B4FC; --gold-shade:#4338CA; --on-gold:#FFFFFF;
-  --teal:#10B981; --teal-shade:#059669; --teal-soft:#0B2A22; --teal-line:#155E48;
+  --gold:#5A51E0; --gold-deep:#A5B4FC; --gold-shade:#4338CA; --on-gold:#FFFFFF;
+  --teal:#10B981; --teal-shade:#059669; --teal-soft:#0B2A22; --teal-line:#155E48; --on-teal:#04160F;
   --red:#F87171; --red-soft:#2C1416; --red-line:#5B2422;
   --hero-a:#1B2340; --hero-b:#141A2E; --hero-line:#2B3557;
   --shadow:0 2px 0 rgba(0,0,0,.3), 0 10px 28px -18px #000;
 } }
 
 /* ---------- Kolam: midnight and saffron ---------- */
-:root[data-theme="kolam"]{
+:root[data-theme="kolam"], [data-theme="kolam"]{
   --paper:#F8F9FC; --paper-2:#ECEFF6; --card:#FFFFFF;
-  --ink:#131A33; --ink-2:#4B5578; --muted:#8A93AE; --line:#DDE2EE;
-  --gold:#E8912B; --gold-deep:#B96F17; --gold-shade:#9A5B10; --on-gold:#24160A;
-  --teal:#0F766E; --teal-shade:#115E59; --teal-soft:#ECFDFA; --teal-line:#9BDDD5;
-  --red:#DC2626; --red-soft:#FEF2F2; --red-line:#F6C6C2;
+  --ink:#131A33; --ink-2:#4B5578; --muted:#848DA8; --line:#DDE2EE;
+  --gold:#E8912B; --gold-deep:#A05F13; --gold-shade:#9A5B10; --on-gold:#24160A;
+  --teal:#0F766E; --teal-shade:#115E59; --teal-soft:#ECFDFA; --teal-line:#9BDDD5; --on-teal:#FFFFFF;
+  --red:#D32222; --red-soft:#FEF2F2; --red-line:#F6C6C2;
   --hero-a:#FFF3E0; --hero-b:#FFE7C4; --hero-line:#F5D3A0;
 }
-@media (prefers-color-scheme: dark){ :root[data-theme="kolam"]{
+@media (prefers-color-scheme: dark){ :root[data-theme="kolam"], [data-theme="kolam"]{
   --paper:#070B1A; --paper-2:#111838; --card:#0E1430;
   --ink:#EDF0FA; --ink-2:#B3BCD8; --muted:#7A85A6; --line:#212A50;
   --gold:#FFB43D; --gold-deep:#FFC773; --gold-shade:#C9832A; --on-gold:#241505;
-  --teal:#2DD4BF; --teal-shade:#14B8A6; --teal-soft:#06251F; --teal-line:#12564C;
+  --teal:#2DD4BF; --teal-shade:#14B8A6; --teal-soft:#06251F; --teal-line:#12564C; --on-teal:#04201C;
   --red:#FB7185; --red-soft:#2B1018; --red-line:#59202E;
   --hero-a:#151E46; --hero-b:#0D1330; --hero-line:#2A3566;
   --shadow:0 2px 0 rgba(0,0,0,.35), 0 10px 28px -18px #000;
@@ -63,58 +63,58 @@
    Tuned for long sittings and young eyes: no pure white, no pure
    black, nothing fully saturated. Contrast stays above WCAG AA for
    body text but stops well short of the glare of black-on-white. */
-:root, :root[data-theme="mayil"]{
+:root, :root[data-theme="mayil"], [data-theme="mayil"]{
   --paper:#F1F6F3; --paper-2:#E3EDE8; --card:#FBFDFC;
-  --ink:#15302A; --ink-2:#456158; --muted:#7B958C; --line:#D3E2DB;
+  --ink:#15302A; --ink-2:#456158; --muted:#779188; --line:#D3E2DB;
   --gold:#12766B; --gold-deep:#0E5C53; --gold-shade:#0A4740; --on-gold:#FFFFFF;
-  --teal:#4F8F3F; --teal-shade:#3E7231; --teal-soft:#EAF4E6; --teal-line:#BEDCB2;
-  --red:#B4553F; --red-soft:#FAEFEB; --red-line:#E7C3B6;
+  --teal:#437A36; --teal-shade:#3E7231; --teal-soft:#EAF4E6; --teal-line:#BEDCB2; --on-teal:#FFFFFF;
+  --red:#AC5039; --red-soft:#FAEFEB; --red-line:#E7C3B6;
   --hero-a:#E6F2EC; --hero-b:#D6EAE1; --hero-line:#BCDCD0;
   --shadow:0 2px 0 rgba(21,48,42,.04), 0 10px 28px -18px rgba(21,48,42,.35);
 }
-@media (prefers-color-scheme: dark){ :root, :root[data-theme="mayil"]{
+@media (prefers-color-scheme: dark){ :root, :root[data-theme="mayil"], [data-theme="mayil"]{
   --paper:#0E1A18; --paper-2:#162523; --card:#132220;
   --ink:#DCE9E4; --ink-2:#A6BFB7; --muted:#6F8B83; --line:#22352F;
   --gold:#4FB79F; --gold-deep:#83D6C0; --gold-shade:#37866F; --on-gold:#07201B;
-  --teal:#7CC46B; --teal-shade:#5FA451; --teal-soft:#132A18; --teal-line:#2A5030;
+  --teal:#7CC46B; --teal-shade:#5FA451; --teal-soft:#132A18; --teal-line:#2A5030; --on-teal:#07201B;
   --red:#E08A72; --red-soft:#2A1712; --red-line:#4A2A20;
   --hero-a:#16302B; --hero-b:#0F231F; --hero-line:#24443C;
   --shadow:0 2px 0 rgba(0,0,0,.28), 0 10px 28px -18px #000;
 } }
 
 /* ---------- Malligai: jasmine ---------- */
-:root[data-theme="malligai"]{
+:root[data-theme="malligai"], [data-theme="malligai"]{
   --paper:#FBFDF8; --paper-2:#EFF5E9; --card:#FFFFFF;
-  --ink:#16261A; --ink-2:#48604D; --muted:#85997F; --line:#DDE8D6;
-  --gold:#3F8F43; --gold-deep:#2F6B33; --gold-shade:#255529; --on-gold:#FFFFFF;
-  --teal:#0E7490; --teal-shade:#155E75; --teal-soft:#ECFEFF; --teal-line:#A5DDE9;
+  --ink:#16261A; --ink-2:#48604D; --muted:#80947A; --line:#DDE8D6;
+  --gold:#39823C; --gold-deep:#2F6B33; --gold-shade:#255529; --on-gold:#FFFFFF;
+  --teal:#0E7490; --teal-shade:#155E75; --teal-soft:#ECFEFF; --teal-line:#A5DDE9; --on-teal:#FFFFFF;
   --red:#C0392B; --red-soft:#FDF0EE; --red-line:#EFC0B9;
   --hero-a:#F0F9EA; --hero-b:#E2F2D8; --hero-line:#C9E3B9;
 }
-@media (prefers-color-scheme: dark){ :root[data-theme="malligai"]{
+@media (prefers-color-scheme: dark){ :root[data-theme="malligai"], [data-theme="malligai"]{
   --paper:#08130B; --paper-2:#112016; --card:#0D1A11;
   --ink:#E8F3E7; --ink-2:#B0C8B2; --muted:#7C9680; --line:#1E3524;
   --gold:#6EC46F; --gold-deep:#A6E3A1; --gold-shade:#4E9E52; --on-gold:#08210A;
-  --teal:#38BDF8; --teal-shade:#0EA5E9; --teal-soft:#06232E; --teal-line:#0C4A6E;
+  --teal:#38BDF8; --teal-shade:#0EA5E9; --teal-soft:#06232E; --teal-line:#0C4A6E; --on-teal:#04161F;
   --red:#F87171; --red-soft:#2A1414; --red-line:#57221F;
   --hero-a:#122A17; --hero-b:#0C1D0F; --hero-line:#20422A;
   --shadow:0 2px 0 rgba(0,0,0,.35), 0 10px 28px -18px #000;
 } }
 
 /* ---------- Suvadi: the original palm leaf ---------- */
-:root[data-theme="suvadi"]{
+:root[data-theme="suvadi"], [data-theme="suvadi"]{
   --paper:#FDF8F0; --paper-2:#F6EEE1; --card:#FFFFFF;
   --ink:#2B2118; --ink-2:#6B5B49; --muted:#8B7A66; --line:#E7DBC7;
-  --gold:#E8A33D; --gold-deep:#C4801E; --gold-shade:#A66A14; --on-gold:#3A2603;
-  --teal:#1F7A6B; --teal-shade:#14574C; --teal-soft:#E4F1EE; --teal-line:#B9DCD4;
-  --red:#C2452D; --red-soft:#FBEAE6; --red-line:#F0C8BE;
+  --gold:#E8A33D; --gold-deep:#996314; --gold-shade:#A66A14; --on-gold:#3A2603;
+  --teal:#1C7061; --teal-shade:#14574C; --teal-soft:#E4F1EE; --teal-line:#B9DCD4; --on-teal:#FFFFFF;
+  --red:#B84129; --red-soft:#FBEAE6; --red-line:#F0C8BE;
   --hero-a:#FFF6E6; --hero-b:#FDECD2; --hero-line:#F0DCB8;
 }
-@media (prefers-color-scheme: dark){ :root[data-theme="suvadi"]{
+@media (prefers-color-scheme: dark){ :root[data-theme="suvadi"], [data-theme="suvadi"]{
   --paper:#191512; --paper-2:#221C17; --card:#241E19;
   --ink:#F5EDE2; --ink-2:#C9BAA7; --muted:#9E8D79; --line:#3A3026;
   --gold:#E8A33D; --gold-deep:#E8A33D; --gold-shade:#A66A14; --on-gold:#241505;
-  --teal:#3FBFA6; --teal-shade:#1F7A6B; --teal-soft:#12312C; --teal-line:#1F5348;
+  --teal:#3FBFA6; --teal-shade:#1F7A6B; --teal-soft:#12312C; --teal-line:#1F5348; --on-teal:#06211C;
   --red:#E8776A; --red-soft:#3A1E18; --red-line:#5E2E24;
   --hero-a:#2C2318; --hero-b:#241C13; --hero-line:#3D3020;
   --shadow:0 2px 0 rgba(0,0,0,.3), 0 10px 28px -18px #000;
@@ -191,7 +191,7 @@ body{
 .btn:active{transform:translateY(3px); box-shadow:0 0 0 var(--gold-shade)}
 .btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:2px solid var(--line)}
 .btn.ghost:active{transform:none;background:var(--paper-2)}
-.btn.teal{background:var(--teal);color:#fff;box-shadow:0 3px 0 var(--teal-shade)}
+.btn.teal{background:var(--teal);color:var(--on-teal);box-shadow:0 3px 0 var(--teal-shade)}
 .btn.teal:active{box-shadow:0 0 0 var(--teal-shade)}
 .btn[disabled]{opacity:.4;pointer-events:none}
 .btn.sm{min-height:44px;font-size:15px;padding:8px 14px;width:auto}

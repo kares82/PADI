@@ -30,13 +30,34 @@ var Engine = (function () {
         for (var k in p) if (p.hasOwnProperty(k)) S[k] = p[k];
       }
     }catch(e){}
-    if(!S.srs) S.srs={}; if(!S.units) S.units={};
-    if(!S.streak) S.streak={last:null,days:0};
-    if(!S.stats) S.stats={answers:0,correct:0};
-    if(!S.settings) S.settings={sound:true,variety:null,hideEnglish:false,theme:'mayil'};
-    if(!S.settings.theme) S.settings.theme='mayil';
-    if(!S.game) S.game={xp:0,todayXp:0,day:null,goal:60,seenLevel:0,read:{}};
-    if(!S.game.read) S.game.read={};
+    /* Fill in field by field, not object by object. Replacing a whole
+       sub-object only helps when it is entirely absent; a save written
+       by an older version has the object but not the newer keys inside
+       it, and those stay undefined. That is how S.game.todayXp becomes
+       NaN the first time it is incremented. Every field the app reads
+       is defaulted individually. */
+    function fill(obj, defs){
+      if (!obj || typeof obj !== 'object') obj = {};
+      for (var k in defs) if (defs.hasOwnProperty(k) && obj[k] === undefined) obj[k] = defs[k];
+      return obj;
+    }
+    function num(v, d){ return (typeof v === 'number' && isFinite(v)) ? v : d; }
+
+    S.srs   = (S.srs   && typeof S.srs   === 'object') ? S.srs   : {};
+    S.units = (S.units && typeof S.units === 'object') ? S.units : {};
+    S.streak   = fill(S.streak,   { last:null, days:0 });
+    S.stats    = fill(S.stats,    { answers:0, correct:0 });
+    S.settings = fill(S.settings, { sound:true, variety:null, hideEnglish:false, theme:'mayil' });
+    S.game     = fill(S.game,     { xp:0, todayXp:0, day:null, goal:60, seenLevel:0, read:{} });
+    if (!S.settings.theme) S.settings.theme = 'mayil';
+    S.game.read = (S.game.read && typeof S.game.read === 'object') ? S.game.read : {};
+    S.game.xp        = num(S.game.xp, 0);
+    S.game.todayXp   = num(S.game.todayXp, 0);
+    S.game.goal      = Math.max(10, num(S.game.goal, 60));
+    S.game.seenLevel = num(S.game.seenLevel, 0);
+    S.streak.days    = num(S.streak.days, 0);
+    S.stats.answers  = num(S.stats.answers, 0);
+    S.stats.correct  = num(S.stats.correct, 0);
     if(S.settings.variety===undefined) S.settings.variety=null;
   }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
@@ -252,18 +273,43 @@ var Engine = (function () {
     var ax = mk();   // animated pen guide
     var ux = mk();   // user ink
 
-    var fs = size*0.74;
-    var font = fs+'px "Noto Sans Tamil","Nirmala UI","Latha",sans-serif';
+    var FAM = '"Noto Sans Tamil","Nirmala UI","Latha","Tamil Sangam MN",sans-serif';
     var brush = Math.max(9, size*0.055);
+    var pad = brush * 0.9;
+
+    /* Size the letter to FIT. A fixed font size clipped every wide form
+       - anything with a mark on the left or both sides, which is over
+       half the grid - and because the score is measured against this
+       same ghost, a clipped target also scored the learner unfairly.
+       Glyph metrics scale linearly with font size, so one measurement
+       at a reference size gives the exact scale in one shot. */
+    var fs, drawX, drawY;
+    (function fit(){
+      var ref = 100;
+      var probe = document.createElement('canvas').getContext('2d');
+      probe.font = ref + 'px ' + FAM;
+      var m = probe.measureText(glyph);
+      var l = Math.abs(m.actualBoundingBoxLeft || 0);
+      var r = (m.actualBoundingBoxRight   != null) ? m.actualBoundingBoxRight   : m.width;
+      var a = (m.actualBoundingBoxAscent  != null) ? m.actualBoundingBoxAscent  : ref*0.95;
+      var d = (m.actualBoundingBoxDescent != null) ? m.actualBoundingBoxDescent : ref*0.45;
+      var wRef = Math.max(1, l + r), hRef = Math.max(1, a + d);
+      var avail = size - pad*2;
+      fs = Math.min(size*0.74, avail/wRef*ref, avail/hRef*ref);
+      var k = fs/ref;
+      drawX = pad + (avail - wRef*k)/2 + l*k;   // centre on the ink, not the advance
+      drawY = pad + (avail - hRef*k)/2 + a*k;
+    })();
+    var font = fs + 'px ' + FAM;
 
     function drawGhost(){
       gx.clearRect(0,0,size,size);
-      gx.font = font; gx.textAlign='center'; gx.textBaseline='middle';
+      gx.font = font; gx.textAlign='left'; gx.textBaseline='alphabetic';
       // fatten the target a little so honest near-misses still count
       gx.lineWidth = brush*0.5; gx.lineJoin='round';
       gx.strokeStyle = 'rgba(0,0,0,1)'; gx.fillStyle='rgba(0,0,0,1)';
-      gx.strokeText(glyph, size/2, size*0.53);
-      gx.fillText(glyph, size/2, size*0.53);
+      gx.strokeText(glyph, drawX, drawY);
+      gx.fillText(glyph, drawX, drawY);
     }
     // hidden mask kept in a separate buffer, then repaint ghost faintly
     var mask, ink = null;
@@ -279,9 +325,9 @@ var Engine = (function () {
       }
       ink = (x1 < 0) ? null : { x:x0/dpr, y:y0/dpr, w:(x1-x0)/dpr, h:(y1-y0)/dpr };
       gx.clearRect(0,0,size,size);
-      gx.font = font; gx.textAlign='center'; gx.textBaseline='middle';
+      gx.font = font; gx.textAlign='left'; gx.textBaseline='alphabetic';
       gx.fillStyle = themeInk(matchMedia('(prefers-color-scheme: dark)').matches ? 0.30 : 0.20);
-      gx.fillText(glyph, size/2, size*0.53);
+      gx.fillText(glyph, drawX, drawY);
     }
     buildMask();
 
