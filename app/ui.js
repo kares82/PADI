@@ -308,8 +308,10 @@ function buildLesson(unit){
 
 /* ---------------- lesson runner ---------------- */
 var L = null;
+var lessonActive = false;
 
 function startLesson(unit){
+  lessonActive = true;
   L = { unit:unit, steps:buildLesson(unit), i:0, right:0, wrong:0, redo:[], redoRounds:0 };
   Engine.touchStreak();
   drawStep();
@@ -325,6 +327,7 @@ function startReview(){
     var p = pool.filter(function(x){ return x.kind === it.kind; });
     return randomEx(it, p.length >= 4 ? p : pool);
   });
+  lessonActive = true;
   L = { unit:{ id:'review', title:'Review', kind:'review' }, steps:steps, i:0, right:0, wrong:0, redo:[], redoRounds:0 };
   Engine.touchStreak();
   drawStep();
@@ -363,6 +366,7 @@ function nextStep(){
 }
 
 function finishLesson(){
+  lessonActive = false;
   var u = L.unit;
   if (u.id !== 'review'){
     Engine.S.units[u.id] = Engine.S.units[u.id] || {};
@@ -1672,6 +1676,24 @@ sndBt.addEventListener('click', function(){
 sndBt.textContent = Engine.S.settings.sound ? '🔊' : '🔇';
 
 window.addEventListener('hashchange', route);
+
+/* Two copies of the app open at once used to drift apart and then
+   overwrite each other's progress. Pick up anything another window
+   wrote, but never in the middle of a lesson. */
+function syncFromDisk(){
+  if (lessonActive) return;
+  if (!Engine.diskIsNewer()) { refreshDue(); return; }
+  if (Engine.reload()) route();
+}
+window.addEventListener('storage', function(e){
+  if (e.key && e.key !== 'tamilpath.v1') return;
+  syncFromDisk();
+});
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'visible') syncFromDisk();
+});
+window.addEventListener('focus', syncFromDisk);
+
 route();
 
 })();

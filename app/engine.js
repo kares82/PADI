@@ -5,7 +5,7 @@
 
 var Engine = (function () {
 
-  var BUILD = '2026-08-22.7';
+  var BUILD = '2026-08-22.8';
 
   /* ---------------- storage ---------------- */
   var KEY = 'tamilpath.v1';
@@ -24,14 +24,31 @@ var Engine = (function () {
   }
   function dayNum(){ return Math.floor(Date.now()/864e5); }
 
+  /* A fresh, complete state. load() starts from this every time rather
+     than merging onto whatever happens to be in memory, so re-reading
+     after the store has been emptied really does empty the app. */
+  function blank(){
+    return {
+      srs:{}, units:{},
+      streak:{ last:null, days:0 },
+      stats:{ answers:0, correct:0 },
+      settings:{ sound:true, variety:null, hideEnglish:false,
+                 theme:'mayil', scheme:'auto', themePicked:false },
+      game:{ xp:0, todayXp:0, day:null, goal:60, seenLevel:0, read:{} },
+      savedAt:0
+    };
+  }
+
   function load(){
+    var p = {};
     try{
       var raw = localStorage.getItem(KEY);
-      if (raw){
-        var p = JSON.parse(raw);
-        for (var k in p) if (p.hasOwnProperty(k)) S[k] = p[k];
-      }
-    }catch(e){}
+      if (raw) p = JSON.parse(raw) || {};
+    }catch(e){ p = {}; }
+    // S is handed out by reference as Engine.S, so reset it in place
+    var base = blank(), k;
+    for (k in base) if (base.hasOwnProperty(k)) S[k] = base[k];
+    for (k in p) if (p.hasOwnProperty(k)) S[k] = p[k];
     /* Fill in field by field, not object by object. Replacing a whole
        sub-object only helps when it is entirely absent; a save written
        by an older version has the object but not the newer keys inside
@@ -66,7 +83,35 @@ var Engine = (function () {
     S.stats.correct  = num(S.stats.correct, 0);
     if(S.settings.variety===undefined) S.settings.variety=null;
   }
-  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+  var loadedAt = 0;
+  function save(){
+    try{
+      S.savedAt = Date.now();
+      loadedAt = S.savedAt;
+      localStorage.setItem(KEY, JSON.stringify(S));
+    }catch(e){}
+  }
+
+  /* Every window keeps its own copy of S in memory and save() writes the
+     whole object, so two open copies of the app quietly overwrite each
+     other - the second one to save wipes whatever the first did. Re-read
+     from disk whenever another window writes, or when this window is
+     brought back to the front. Returns true if anything actually moved. */
+  function reload(){
+    var before = JSON.stringify([S.srs, S.units, S.game, S.streak, S.stats]);
+    load();
+    loadedAt = S.savedAt || 0;
+    applyTheme(); applyScheme();
+    return JSON.stringify([S.srs, S.units, S.game, S.streak, S.stats]) !== before;
+  }
+  function diskIsNewer(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return false;
+      var t = (JSON.parse(raw) || {}).savedAt || 0;
+      return t > loadedAt;
+    }catch(e){ return false; }
+  }
   function reset(){ S.srs={}; S.units={}; S.streak={last:null,days:0}; S.stats={answers:0,correct:0};
     S.game={xp:0,todayXp:0,day:null,goal:60,seenLevel:0,read:{}}; save(); }
 
@@ -518,13 +563,14 @@ var Engine = (function () {
   }
 
   load();
+  loadedAt = S.savedAt || 0;
   applyTheme();
   applyScheme();
   initVoices();
   loadClips();
 
   return {
-    S:S, save:save, reset:reset, touchStreak:touchStreak, today:today, dayNum:dayNum,
+    S:S, save:save, reload:reload, diskIsNewer:diskIsNewer, reset:reset, touchStreak:touchStreak, today:today, dayNum:dayNum,
     itemId:itemId, ensure:ensure, grade:grade, dueItems:dueItems, learnedIds:learnedIds,
     BUILD:BUILD, applyTheme:applyTheme, applyScheme:applyScheme, isDark:isDark, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
     checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
