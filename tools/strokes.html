@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stroke extractor — build tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{font:14px/1.4 system-ui;background:#14110e;color:#eee;margin:0;padding:16px}
+  h1{font-size:16px;margin:0 0 4px}
+  p{color:#998;margin:0 0 14px}
+  #grid{display:flex;flex-wrap:wrap;gap:10px}
+  .cell{background:#201b16;border:1px solid #3a3026;border-radius:10px;padding:6px;text-align:center}
+  .cell canvas{display:block;background:#14110e;border-radius:6px}
+  .cell b{font-size:12px;display:block;margin-top:4px}
+  .cell .s{font-size:11px;color:#9a8}
+  .bad{outline:2px solid #C2452D}
+  textarea{width:100%;height:180px;background:#0d0b09;color:#8fd;border:1px solid #3a3026;border-radius:8px;font:11px monospace;margin-top:14px}
+  button{background:#E8A33D;border:0;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;margin-right:8px}
+</style>
+</head>
+<body>
+<h1>Tamil stroke extractor</h1>
+<p>Rasterises each glyph from the real font, thins it to a 1px skeleton (Zhang–Suen), traces the
+skeleton graph into strokes, simplifies, then orders them top-left → bottom-right.
+Coordinates are normalised to each glyph's <b>ink bounding box</b> so they survive font substitution.
+Numbers = stroke order. Dot = pen-down. Arrow = direction.</p>
+<button id="dump">Show JS data</button>
+<button id="toggle">Toggle skeleton / glyph</button>
+<div id="grid"></div>
+<textarea id="out" readonly></textarea>
+
+<script>
+const N = 220;
+const VOWELS = ['அ','ஆ','இ','ஈ','உ','ஊ','எ','ஏ','ஐ','ஒ','ஓ','ஔ'];
+const CONS   = ['க','ச','த','ப','ம','ய','ந','ன','ண','ல','ள','ழ','ர','ற','வ','ட','ங','ஞ'];
+const SIGNS  = ['்','','ா','ி','ீ','ு','ூ','ெ','ே','ை','ொ','ோ','ௌ'];
+// every glyph the app can ever ask you to trace: the 12 vowels plus the
+// full 18 x 13 consonant grid
+const ALL = VOWELS.concat([].concat.apply([], CONS.map(c => SIGNS.map(g => c + g))));
+
+/* manual overrides, filled in after inspecting the render:
+   order: new order of stroke indices;  flip: indices to reverse  */
+const FIX = {};
+
+function rasterize(ch){
+  const c = document.createElement('canvas'); c.width = c.height = N;
+  const x = c.getContext('2d', {willReadFrequently:true});
+  x.fillStyle = '#fff'; x.fillRect(0,0,N,N);
+  x.fillStyle = '#000';
+  x.font = Math.round(N*0.62)+'px "Noto Sans Tamil"';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(ch, N/2, N*0.52);
+  const d = x.getImageData(0,0,N,N).data;
+  const m = new Uint8Array(N*N);
+  for (let i=0;i<N*N;i++) m[i] = d[i*4] < 128 ? 1 : 0;
+  return m;
+}
+
+function bbox(m){
+  let x0=1e9,y0=1e9,x1=-1,y1=-1;
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++) if (m[y*N+x]){
+    if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
+  }
+  return {x0,y0,x1,y1,w:x1-x0,h:y1-y0};
+}
+
+/* ---- Zhang-Suen thinning ---- */
+function thin(src){
+  const m = Uint8Array.from(src);
+  const g = (x,y) => (x<0||y<0||x>=N||y>=N) ? 0 : m[y*N+x];
+  let changed = true, guard = 0;
+  while (changed && guard++ < 200){
+    changed = false;
+    for (let step=0; step<2; step++){
+      const del = [];
+      for (let y=1;y<N-1;y++) for (let x=1;x<N-1;x++){
+        if (!m[y*N+x]) continue;
+        const p2=g(x,y-1),p3=g(x+1,y-1),p4=g(x+1,y),p5=g(x+1,y+1),
+              p6=g(x,y+1),p7=g(x-1,y+1),p8=g(x-1,y),p9=g(x-1,y-1);
+        const B = p2+p3+p4+p5+p6+p7+p8+p9;
+        if (B<2 || B>6) continue;
+        const seq=[p2,p3,p4,p5,p6,p7,p8,p9,p2];
+        let A=0; for(let k=0;k<8;k++) if(seq[k]===0 && seq[k+1]===1) A++;
+        if (A!==1) continue;
+        if (step===0){ if (p2*p4*p6) continue; if (p4*p6*p8) continue; }
+        else        { if (p2*p4*p8) continue; if (p2*p6*p8) continue; }
+        del.push(y*N+x);
+      }
+      if (del.length){ changed = true; for (const i of del) m[i]=0; }
+    }
+  }
+  return m;
+}
+
+/* ---- skeleton neighbourhood ---- */
+const NB4 = [[1,0],[0,1],[-1,0],[0,-1]];
+const NBD = [[1,1],[-1,1],[-1,-1],[1,-1]];
+function mkNeigh(m){
+  const on = (x,y) => (x>=0&&y>=0&&x<N&&y<N) && !!m[y*N+x];
+  return function (x,y){
+    const out = [];
+    for (const [dx,dy] of NB4) if (on(x+dx,y+dy)) out.push([x+dx,y+dy]);
+    // a diagonal is only a real link when it is not shortcutting two
+    // orthogonal steps that are already on the skeleton
+    for (const [dx,dy] of NBD)
+      if (on(x+dx,y+dy) && !on(x+dx,y) && !on(x,y+dy)) out.push([x+dx,y+dy]);
+    return out;
+  };
+}
+
+/* ---- prune spurious skeleton spurs ---- */
+function prune(m, minLen){
+  const on = (x,y) => (x>=0&&y>=0&&x<N&&y<N) && !!m[y*N+x];
+  const neigh = mkNeigh(m);
+  for (let pass=0; pass<6; pass++){
+    const kill = [];
+    for (let y=0;y<N;y++) for (let x=0;x<N;x++){
+      if (!on(x,y) || neigh(x,y).length !== 1) continue;
+      // walk inward from this endpoint until we hit a junction
+      const path = [[x,y]];
+      let px=x, py=y, [cx,cy] = neigh(x,y)[0];
+      while (path.length < minLen+2){
+        const nb = neigh(cx,cy);
+        if (nb.length !== 2) break;                 // junction or dead end
+        path.push([cx,cy]);
+        const nxt = nb.find(p => p[0]!==px || p[1]!==py);
+        if (!nxt) break;
+        px=cx; py=cy; cx=nxt[0]; cy=nxt[1];
+      }
+      if (path.length <= minLen && neigh(cx,cy).length > 2) kill.push(...path);
+    }
+    if (!kill.length) break;
+    for (const [kx,ky] of kill) m[ky*N+kx] = 0;
+  }
+  return m;
+}
+
+/* ---- skeleton graph -> arcs -> merged strokes ---- */
+function trace(m){
+  const on = (x,y) => (x>=0&&y>=0&&x<N&&y<N) && !!m[y*N+x];
+  const neigh = mkNeigh(m);
+  const deg = (x,y) => neigh(x,y).length;
+  const idx = (x,y) => y*N+x;
+  const ek  = (a,b) => a<b ? a+'|'+b : b+'|'+a;
+  const used = new Set();
+  const arcs = [];
+
+  function walk(sx,sy,nx,ny){
+    const pts = [[sx,sy]];
+    let px=sx, py=sy, cx=nx, cy=ny;
+    for(;;){
+      used.add(ek(idx(px,py), idx(cx,cy)));
+      pts.push([cx,cy]);
+      if (deg(cx,cy) !== 2) break;
+      const nxt = neigh(cx,cy).filter(p => !used.has(ek(idx(cx,cy), idx(p[0],p[1]))));
+      if (!nxt.length) break;
+      px=cx; py=cy; cx=nxt[0][0]; cy=nxt[0][1];
+    }
+    return pts;
+  }
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++){
+    if (!on(x,y) || deg(x,y) === 2) continue;
+    for (const [nx,ny] of neigh(x,y))
+      if (!used.has(ek(idx(x,y), idx(nx,ny)))) arcs.push(walk(x,y,nx,ny));
+  }
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++){          // closed loops
+    if (!on(x,y) || deg(x,y)!==2) continue;
+    const free = neigh(x,y).filter(p=>!used.has(ek(idx(x,y), idx(p[0],p[1]))));
+    if (free.length) arcs.push(walk(x,y,free[0][0],free[0][1]));
+  }
+  return route(arcs.filter(a => a.length > 2));
+}
+
+/* Walk the skeleton the way a hand would: start top-left, always carry on
+   through the straightest continuation, only lift the pen when there is
+   nothing left to join. Most Tamil letters come out as ONE stroke, which
+   is how they are genuinely written. */
+function route(arcs){
+  const key = p => p[0]+','+p[1];
+  const A = arcs.map(p => ({pts:p, a:key(p[0]), b:key(p[p.length-1]), used:false}));
+  const tanStart = pts => { const k=Math.min(6,pts.length-1); return Math.atan2(pts[k][1]-pts[0][1], pts[k][0]-pts[0][0]); };
+  const tanEnd   = pts => { const n=pts.length-1, k=Math.max(0,n-6); return Math.atan2(pts[n][1]-pts[k][1], pts[n][0]-pts[k][0]); };
+  const turn = (a,b) => { let d=Math.abs(a-b)%(2*Math.PI); return d>Math.PI ? 2*Math.PI-d : d; };
+  const incident = k => A.filter(x => !x.used && (x.a===k || x.b===k));
+
+  function pickStart(){
+    let best = null;
+    for (const x of A){
+      if (x.used) continue;
+      const ends = [[x.a, x.pts[0]], [x.b, x.pts[x.pts.length-1]]];
+      for (const [k,pt] of ends){
+        // topmost, then leftmost; true endpoints beat mid-graph junctions
+        const score = pt[1]*1000 + pt[0] + (incident(k).length === 1 ? 0 : 250000);
+        if (!best || score < best.score) best = {score, key:k};
+      }
+    }
+    return best;
+  }
+
+  const strokes = [];
+  let guard = 0;
+  while (A.some(x => !x.used) && guard++ < 200){
+    const st = pickStart(); if (!st) break;
+    let cur = st.key, dir = Math.PI/4, pts = [];   // first move tends down-right
+    for(;;){
+      const cands = incident(cur);
+      if (!cands.length) break;
+      let best = null;
+      for (const x of cands){
+        const seq = (x.a === cur) ? x.pts : x.pts.slice().reverse();
+        const t = turn(dir, tanStart(seq));
+        if (!best || t < best.t) best = {x, seq, t};
+      }
+      best.x.used = true;
+      pts = pts.length ? pts.concat(best.seq.slice(1)) : best.seq.slice();
+      dir = tanEnd(best.seq);
+      cur = (best.x.a === cur && best.x.b !== best.x.a) ? best.x.b : best.x.a;
+    }
+    if (pts.length > 2) strokes.push(pts);
+  }
+  return strokes;
+}
+
+function pathLen(p){ let t=0; for(let i=1;i<p.length;i++) t += Math.hypot(p[i][0]-p[i-1][0], p[i][1]-p[i-1][1]); return t; }
+function smooth(p){
+  if (p.length < 5) return p;
+  const out=[p[0]];
+  for (let i=1;i<p.length-1;i++){
+    const a=p[i-1], b=p[i], c=p[i+1];
+    out.push([(a[0]+2*b[0]+c[0])/4, (a[1]+2*b[1]+c[1])/4]);
+  }
+  out.push(p[p.length-1]);
+  return out;
+}
+
+/* ---- Douglas-Peucker ---- */
+function simplify(pts, eps){
+  if (pts.length < 3) return pts;
+  let maxD = 0, idx = 0;
+  const [ax,ay] = pts[0], [bx,by] = pts[pts.length-1];
+  const dx = bx-ax, dy = by-ay, len = Math.hypot(dx,dy) || 1;
+  for (let i=1;i<pts.length-1;i++){
+    const d = Math.abs((pts[i][0]-ax)*dy - (pts[i][1]-ay)*dx) / len;
+    if (d > maxD){ maxD = d; idx = i; }
+  }
+  if (maxD > eps){
+    const l = simplify(pts.slice(0, idx+1), eps);
+    const r = simplify(pts.slice(idx), eps);
+    return l.slice(0,-1).concat(r);
+  }
+  return [pts[0], pts[pts.length-1]];
+}
+
+/* ---- ordering: how a hand actually moves ---- */
+function order(strokes){
+  // longest stroke first is wrong for writing; use top-then-left of the
+  // stroke's own starting end, after orienting each stroke sensibly
+  const oriented = strokes.map(p => {
+    const a = p[0], b = p[p.length-1];
+    // pen starts at the higher end; if level, the left one
+    const startFirst = (a[1] < b[1] - 2) || (Math.abs(a[1]-b[1]) <= 2 && a[0] <= b[0]);
+    return startFirst ? p : p.slice().reverse();
+  });
+  return oriented.sort((p,q) => (p[0][1] - q[0][1]) || (p[0][0] - q[0][0]));
+}
+
+function extract(ch){
+  const raw = rasterize(ch);
+  const bb  = bbox(raw);
+  if (bb.w <= 0) return null;
+  const sk  = prune(thin(raw), Math.round(N*0.07));
+  const minLen = Math.max(bb.w, bb.h) * 0.16;
+  let strokes = trace(sk)
+    .filter(p => pathLen(p) > minLen)
+    .map(p => simplify(smooth(p), N*0.014));
+  if (!strokes.length){                      // a bare dot, e.g. the pulli
+    strokes = [[[ (bb.x0+bb.x1)/2, (bb.y0+bb.y1)/2 ], [ (bb.x0+bb.x1)/2 + 1, (bb.y0+bb.y1)/2 ]]];
+  }
+  strokes = order(strokes);
+  const fix = FIX[ch];
+  if (fix){
+    if (fix.order) strokes = fix.order.map(i => strokes[i]).filter(Boolean);
+    if (fix.flip)  fix.flip.forEach(i => { if (strokes[i]) strokes[i] = strokes[i].slice().reverse(); });
+  }
+  // normalise into the ink bounding box
+  const norm = strokes.map(p => p.map(([x,y]) => [
+    +((x - bb.x0) / bb.w).toFixed(2),
+    +((y - bb.y0) / bb.h).toFixed(2)
+  ]));
+  return { ch, bb, raw, sk, strokes, norm };
+}
+
+/* ---- render preview ---- */
+let showSkel = false;
+const results = {};
+const grid = document.getElementById('grid');
+
+function draw(r){
+  const S = 150;
+  const c = document.createElement('canvas'); c.width = c.height = S;
+  const x = c.getContext('2d');
+  const k = S/N;
+  // glyph or skeleton underlay
+  const img = x.createImageData(N,N);
+  const src = showSkel ? r.sk : r.raw;
+  for (let i=0;i<N*N;i++){
+    const v = src[i] ? 255 : 0;
+    img.data[i*4]=v; img.data[i*4+1]=v; img.data[i*4+2]=v;
+    img.data[i*4+3]= src[i] ? 70 : 0;
+  }
+  const tmp = document.createElement('canvas'); tmp.width=tmp.height=N;
+  tmp.getContext('2d').putImageData(img,0,0);
+  x.drawImage(tmp,0,0,S,S);
+
+  const cols = ['#E8A33D','#4FC3E8','#8BE86B','#E86B9E','#C9A0FF','#FFD84F'];
+  r.strokes.forEach((p,i) => {
+    x.strokeStyle = cols[i%cols.length]; x.lineWidth = 1.6; x.lineJoin='round'; x.lineCap='round';
+    x.beginPath(); x.moveTo(p[0][0]*k, p[0][1]*k);
+    for (let j=1;j<p.length;j++) x.lineTo(p[j][0]*k, p[j][1]*k);
+    x.stroke();
+    // pen-down dot
+    x.fillStyle = x.strokeStyle;
+    x.beginPath(); x.arc(p[0][0]*k, p[0][1]*k, 3.2, 0, 7); x.fill();
+    // order number
+    x.fillStyle='#fff'; x.font='bold 9px system-ui'; x.textAlign='center'; x.textBaseline='middle';
+    x.fillText(String(i+1), p[0][0]*k, p[0][1]*k);
+    // arrowhead at the finishing end
+    const a=p[p.length-2], b=p[p.length-1];
+    const ang=Math.atan2(b[1]-a[1], b[0]-a[0]);
+    x.fillStyle=cols[i%cols.length];
+    x.beginPath();
+    x.moveTo(b[0]*k, b[1]*k);
+    x.lineTo(b[0]*k-7*Math.cos(ang-0.4), b[1]*k-7*Math.sin(ang-0.4));
+    x.lineTo(b[0]*k-7*Math.cos(ang+0.4), b[1]*k-7*Math.sin(ang+0.4));
+    x.fill();
+  });
+  return c;
+}
+
+function build(){
+  grid.innerHTML='';
+  for (const ch of ALL.slice(0, 60)){
+    const r = results[ch]; if (!r) continue;
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (r.strokes.length===0 || r.strokes.length>3 ? ' bad' : '');
+    cell.appendChild(draw(r));
+    const b = document.createElement('b'); b.textContent = ch; cell.appendChild(b);
+    const s = document.createElement('span'); s.className='s';
+    s.textContent = r.strokes.length + ' strokes';
+    cell.appendChild(s);
+    grid.appendChild(cell);
+  }
+}
+
+const prog = document.createElement('div');
+prog.style.cssText = 'margin:10px 0;font-weight:700;color:#E8A33D';
+document.body.insertBefore(prog, grid);
+
+document.fonts.ready.then(() => document.fonts.load('140px "Noto Sans Tamil"')).then(() => {
+  let i = 0;
+  function chunk(){
+    const t0 = performance.now();
+    while (i < ALL.length && performance.now() - t0 < 120){
+      const r = extract(ALL[i]); if (r) results[ALL[i]] = r;
+      i++;
+    }
+    prog.textContent = 'extracting ' + i + ' / ' + ALL.length;
+    if (i < ALL.length) setTimeout(chunk, 0);
+    else { prog.textContent = 'done — ' + Object.keys(results).length + ' glyphs'; build(); window.__READY = true; }
+  }
+  setTimeout(chunk, 250);
+});
+
+document.getElementById('toggle').onclick = () => { showSkel = !showSkel; build(); };
+document.getElementById('dump').onclick = () => {
+  const o = {};
+  for (const ch of ALL) if (results[ch]) o[ch] = results[ch].norm;
+  document.getElementById('out').value =
+    '/* auto-extracted from Noto Sans Tamil outlines — see tools/strokes.html */\n' +
+    'var STROKES = ' + JSON.stringify(o) + ';';
+};
+</script>
+</body>
+</html>

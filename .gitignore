@@ -1,0 +1,19 @@
+# Recorded audio clips are generated, not source.
+# Run tools/make-audio.ps1 once (needs a Tamil voice installed) to create them.
+audio/
+tools/selftest/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Only here if the project ever grows a toolchain
+node_modules/
+*.log
