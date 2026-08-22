@@ -1255,7 +1255,20 @@ function renderThemes(){
   back.hidden = false;
 
   app.appendChild(h('p',{class:'sub', style:'margin-bottom:14px',
-    text:'Tap one to try it. It changes instantly and everywhere — including the coloured letters in Unit 0. Each also has its own dark version, which follows your phone.'}));
+    text:'Tap one to try it. It changes instantly and everywhere — including the coloured letters in Unit 0.'}));
+
+  var cur = Engine.S.settings.scheme || 'auto';
+  var seg = h('div',{class:'seg'});
+  [['light','\u2600\ufe0e  Light'],['auto','Auto'],['dark','\u263e\ufe0e  Dark']].forEach(function(o){
+    seg.appendChild(h('button',{class:'segbtn'+(cur===o[0]?' on':''), onclick:function(){
+      Engine.applyScheme(o[0]); renderThemes();
+    }},[o[1]]));
+  });
+  app.appendChild(seg);
+  app.appendChild(h('p',{class:'tag', style:'margin:6px 2px 16px',
+    text: cur==='auto'
+      ? 'Auto follows your phone \u2014 right now that is ' + (Engine.isDark()?'dark':'light') + '.'
+      : 'Locked to ' + cur + ', whatever your phone is set to.'}));
 
   THEMES.forEach(function(th){
     var on = (Engine.S.settings.theme || 'mayil') === th.id;
@@ -1263,7 +1276,8 @@ function renderThemes(){
     // paint the swatches from the theme's own tokens by borrowing a probe node
     var probe = document.createElement('div');
     probe.setAttribute('data-theme', th.id);
-    probe.style.display = 'none';
+    probe.setAttribute('data-scheme', Engine.isDark() ? 'dark' : 'light');
+    probe.style.cssText = 'position:absolute;left:-9999px';
     document.body.appendChild(probe);
     var cs = getComputedStyle(probe);
     ['--paper','--ink','--gold','--teal'].forEach(function(v){
@@ -1291,8 +1305,10 @@ function renderThemes(){
     ]));
   });
 
-  app.appendChild(h('div',{class:'note', style:'margin-top:14px',
-    text:'Dark or light is decided by your phone or computer, not here. Every theme has both.'}));
+  app.appendChild(h('div',{class:'note', style:'margin-top:14px'},[
+    h('b',{text:'Every theme has a light side and a dark side. '}),
+    'If your phone is set to dark, Auto will always hand you the dark one — press Light above to override it.'
+  ]));
 }
 
 function renderStories(){

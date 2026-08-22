@@ -38,8 +38,9 @@ var Compose = (function () {
              mark: rgb(cssVar('--gold-deep'), [14,92,83]) };
   }
   function themeKey(){
-    return (document.documentElement.getAttribute('data-theme') || 'mayil') +
-           (matchMedia('(prefers-color-scheme: dark)').matches ? 'd' : 'l');
+    var dark = (typeof Engine !== 'undefined' && Engine.isDark)
+      ? Engine.isDark() : matchMedia('(prefers-color-scheme: dark)').matches;
+    return (document.documentElement.getAttribute('data-theme') || 'mayil') + (dark ? 'd' : 'l');
   }
 
   /* Actual glyph metrics, so the scratch canvas is never too small.

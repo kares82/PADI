@@ -12,7 +12,7 @@ var Engine = (function () {
     units: {},      // unitId -> {done:true, best:n}
     streak: { last:null, days:0 },
     stats: { answers:0, correct:0 },
-    settings: { sound:true, variety:null, hideEnglish:false, theme:'mayil' },
+    settings: { sound:true, variety:null, hideEnglish:false, theme:'mayil', scheme:'auto' },
     game: { xp:0, todayXp:0, day:null, goal:60, seenLevel:0, read:{} }
   };
 
@@ -47,7 +47,7 @@ var Engine = (function () {
     S.units = (S.units && typeof S.units === 'object') ? S.units : {};
     S.streak   = fill(S.streak,   { last:null, days:0 });
     S.stats    = fill(S.stats,    { answers:0, correct:0 });
-    S.settings = fill(S.settings, { sound:true, variety:null, hideEnglish:false, theme:'mayil' });
+    S.settings = fill(S.settings, { sound:true, variety:null, hideEnglish:false, theme:'mayil', scheme:'auto' });
     S.game     = fill(S.game,     { xp:0, todayXp:0, day:null, goal:60, seenLevel:0, read:{} });
     if (!S.settings.theme) S.settings.theme = 'mayil';
     S.game.read = (S.game.read && typeof S.game.read === 'object') ? S.game.read : {};
@@ -250,6 +250,22 @@ var Engine = (function () {
     document.documentElement.setAttribute('data-theme', S.settings.theme || 'mayil');
     if (name) save();
   }
+  /* 'auto' follows the device; 'light' and 'dark' override it. Most people
+     keep the whole phone dark, so without this they can never reach a
+     theme's light side. */
+  function applyScheme(mode){
+    if (mode) S.settings.scheme = mode;
+    var m = S.settings.scheme || 'auto';
+    if (m === 'light' || m === 'dark') document.documentElement.setAttribute('data-scheme', m);
+    else document.documentElement.removeAttribute('data-scheme');
+    if (mode) save();
+  }
+  function isDark(){
+    var m = S.settings.scheme || 'auto';
+    if (m === 'dark') return true;
+    if (m === 'light') return false;
+    return matchMedia('(prefers-color-scheme: dark)').matches;
+  }
 
   /* ---------------- trace canvas ---------------- */
   /* Renders a ghost glyph, lets the user draw over it, and scores
@@ -326,7 +342,7 @@ var Engine = (function () {
       ink = (x1 < 0) ? null : { x:x0/dpr, y:y0/dpr, w:(x1-x0)/dpr, h:(y1-y0)/dpr };
       gx.clearRect(0,0,size,size);
       gx.font = font; gx.textAlign='left'; gx.textBaseline='alphabetic';
-      gx.fillStyle = themeInk(matchMedia('(prefers-color-scheme: dark)').matches ? 0.30 : 0.20);
+      gx.fillStyle = themeInk(isDark() ? 0.30 : 0.20);
       gx.fillText(glyph, drawX, drawY);
     }
     buildMask();
@@ -497,13 +513,14 @@ var Engine = (function () {
 
   load();
   applyTheme();
+  applyScheme();
   initVoices();
   loadClips();
 
   return {
     S:S, save:save, reset:reset, touchStreak:touchStreak, today:today, dayNum:dayNum,
     itemId:itemId, ensure:ensure, grade:grade, dueItems:dueItems, learnedIds:learnedIds,
-    applyTheme:applyTheme, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
+    applyTheme:applyTheme, applyScheme:applyScheme, isDark:isDark, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
     checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
     mastery:mastery, GAPS:GAPS,
     speak:speak, hasTamilVoice:hasTamilVoice, hasClips:hasClips, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
