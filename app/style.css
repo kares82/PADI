@@ -439,3 +439,13 @@ table.chart td.hl{background:var(--teal-soft);color:var(--teal)}
 .theme:active{transform:scale(.99)}
 .swatches{display:flex; gap:0; flex:0 0 auto; border-radius:9px; overflow:hidden; border:1px solid var(--line)}
 .swatches i{display:block; width:26px; height:34px}
+
+/* close the chart's breakdown panel */
+#cellPanel{position:relative}
+.closex{
+  position:absolute; top:6px; right:6px; width:34px; height:34px;
+  border:1px solid var(--line); border-radius:10px; background:var(--paper-2);
+  color:var(--ink-2); font-size:21px; line-height:1; cursor:pointer;
+  display:grid; place-items:center; font-family:var(--ui);
+}
+.closex:active{background:var(--line)}

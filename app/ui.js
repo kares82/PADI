@@ -1061,13 +1061,12 @@ function renderVarietyPicker(first){
         h('div',{class:'glyph', style:'font-size:22px;font-weight:600;opacity:.75;margin-top:2px', lang:'ta', text:v.eg}),
         h('div',{class:'tag', style:'margin-top:4px', text:'\u201cI am going\u201d'})
       ]),
-      h('small',{style:'display:block;color:var(--muted);font-size:13.5px;font-weight:600;margin-top:10px', text:v.note})
     ]));
   });
 
   app.appendChild(h('div',{class:'note', style:'margin-top:14px'},[
     h('b',{text:'Only the \u201cyou say\u201d side changes. '}),
-    'Written Tamil is identical everywhere \u2014 Jaffna, Chennai, Kuala Lumpur, Toronto. That is the whole point of learning it. You can switch this any time from the home screen.'
+    'Written Tamil is identical everywhere in the world. That is the whole point of learning it. You can switch this any time from the home screen.'
   ]));
 
   if (!first) return;
@@ -1419,7 +1418,7 @@ function renderGrid(){
 
   app.appendChild(h('p',{class:'sub', style:'margin-bottom:12px'},[
     'Down the side: the 18 consonants. Across the top: the 12 vowels. Every cell is just the two glued together. ',
-    h('b',{text:'Tap any cell.'})
+    h('b',{text:'Tap any cell'}), ' \u2014 tap it again to close.'
   ]));
 
   var cols = [{s:DATA.PULLI, head:'்', lbl:'—'}].concat(
@@ -1456,12 +1455,20 @@ function renderGrid(){
   ]));
 
   var lastTd = null;
+  function clearCell(){
+    if (lastTd) lastTd.classList.remove('hl');
+    lastTd = null;
+    panel.innerHTML = '';
+    panel.appendChild(h('p',{class:'sub center', text:'Tap a cell above to break it apart.'}));
+  }
   function showCell(c, col, g, td){
+    if (lastTd === td) return clearCell();   // tap the same cell again to close
     if (lastTd) lastTd.classList.remove('hl');
     td.classList.add('hl'); lastTd = td;
     Engine.speak(g);
     var isPulli = col.s === DATA.PULLI;
     panel.innerHTML = '';
+    panel.appendChild(h('button',{class:'closex', 'aria-label':'Close', onclick:clearCell},['\u00d7']));
     panel.appendChild(h('div',{class:'demo', style:'margin:0 0 12px'},[
       h('div',{class:'u'},[ ta(c.ch), h('span',{class:'lbl', text:c.lab}) ]),
       h('span',{class:'op', text:'+'}),
