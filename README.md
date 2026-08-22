@@ -45,19 +45,41 @@ either, the app says so on the home screen and stays silent; everything else sti
 - **iPhone/iPad:** Settings → Accessibility → Spoken Content → Voices → Tamil
 - **Windows:** Settings → Time & Language → Speech → Manage voices → Add voices → Tamil, then reboot
 
-**To bake the sounds permanently into the app** (Windows, one-off)
+**To bake the sounds permanently into the app** (one-off)
 
-Once a Tamil voice is installed, run:
+This is the real fix: generate all 561 clips once, commit them, and the deployed app
+speaks for everyone regardless of what their device has installed.
+
+*Best quality — Google Cloud Text-to-Speech:*
+
+    $env:GOOGLE_TTS_KEY = "AIza..."
+    powershell -ExecutionPolicy Bypass -File tools\make-audio-google.ps1 -List
+    powershell -ExecutionPolicy Bypass -File tools\make-audio-google.ps1 -Sample
+    powershell -ExecutionPolicy Bypass -File tools\make-audio-google.ps1
+
+`-List` shows every Tamil voice Google offers, `-Sample` renders eight clips so you can
+listen before committing to the full run, `-Voice` forces a particular one, `-Rate`
+changes the speaking speed (default 0.85, deliberately a little slow).
+
+The corpus is 561 clips and about 4,400 characters — roughly 0.4% of Google's monthly
+free tier, so a full run is free. Google does require a billing account on file to
+enable the API, which is the only catch.
+
+*No account — a Tamil voice installed in Windows:*
 
     powershell -ExecutionPolicy Bypass -File tools\make-audio.ps1
 
-It records all 319 letters, syllables, words and sentences into `./audio` and writes the
-manifest the app reads. Reload the app and it picks them up. If `ffmpeg` is on your PATH
-the clips are silence-trimmed and stored as mp3 (a few MB total); otherwise they stay
-as wav (larger, works the same).
+Free, but you have to add the voice first (Settings → Time & Language → Speech → Manage
+voices → Add voices → Tamil, then reboot). `-SelfTest` proves the pipeline works without
+needing Tamil installed.
 
-Useful switches: `-List` shows every voice Windows can see, `-SelfTest` proves the
-recording pipeline works without needing Tamil, `-Force` re-records existing clips.
+**The API key never reaches the app.** It is used by the script, on your machine, to
+produce static mp3 files. Calling a cloud TTS API from the page itself would put the key
+in front of every visitor of a public repo, break offline use, and add a delay to every
+tap — so the app never does that.
+
+Regenerate `tools/audio-list.json` with `tools/audio-list.html` whenever you add new
+words, then re-run the recorder.
 
 ---
 

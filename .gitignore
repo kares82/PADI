@@ -1,7 +1,8 @@
-# Recorded audio clips are generated, not source.
-# Run tools/make-audio.ps1 once (needs a Tamil voice installed) to create them.
-audio/
+# The recorded clips ARE committed - they are what makes the deployed app
+# speak, and no visitor can generate them for themselves. About 5 MB.
+# Generate with tools/make-audio-google.ps1 (or tools/make-audio.ps1).
 tools/selftest/
+tools/sample/
 
 # OS cruft
 .DS_Store

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rebuild audio-list.json</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil&display=swap" rel="stylesheet">
+<style>
+  body{font:15px/1.5 system-ui;background:#0E1A18;color:#DCE9E4;margin:0;padding:22px;max-width:820px}
+  h1{font-size:18px;margin:0 0 6px}
+  p{color:#A6BFB7;margin:0 0 14px}
+  b{color:#83D6C0}
+  textarea{width:100%;height:320px;background:#07110F;color:#83D6C0;border:1px solid #22352F;
+           border-radius:10px;font:12px/1.5 ui-monospace,monospace;padding:10px;margin-top:12px}
+  button{background:#4FB79F;color:#07201B;border:0;border-radius:10px;padding:11px 18px;
+         font-weight:800;cursor:pointer;margin-right:8px;font-size:14px}
+  .stat{background:#162523;border:1px solid #22352F;border-radius:10px;padding:12px 14px;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>Rebuild tools/audio-list.json</h1>
+<p>Every string the app can pass to <code>Engine.speak()</code>, collected straight from the
+live data files and normalised with the app's own <code>speakKey()</code> — so this list can
+never drift from what the app actually asks for. Run this after adding words, stories or
+sentences, save the output over <b>tools/audio-list.json</b>, then re-run the recorder.</p>
+
+<button id="copy">Copy to clipboard</button>
+<button id="dl">Download audio-list.json</button>
+<div class="stat" id="stat">working…</div>
+<textarea id="out" readonly></textarea>
+
+<script src="../app/data.js"></script>
+<script src="../app/register.js"></script>
+<script src="../app/stories.js"></script>
+<script src="../app/strokes.js"></script>
+<script src="../app/compose.js"></script>
+<script src="../app/engine.js"></script>
+<script>
+(function(){
+  var K = Engine.speakKey;
+  var set = new Set();
+  function add(t){ t = K(t); if (t && /[஀-௿]/.test(t)) set.add(t); }
+
+  DATA.VOWELS.forEach(function(v){ add(v.ch); });
+  var signs = [''].concat([DATA.PULLI]).concat(DATA.SIGNS.map(function(s){ return s.s; }));
+  DATA.CONS.forEach(function(c){ signs.forEach(function(s){ add(c.ch + s); }); });
+  DATA.ALLWORDS.forEach(function(w){ add(w.w); DATA.clusters(w.w).forEach(add); });
+  REGISTER.BRIDGE.forEach(function(b){ add(b.f); add(b.IN); add(b.LK); });
+  REGISTER.NEWSPAT.forEach(function(p){ p.ex.forEach(function(e){ add(e.f); }); });
+  REGISTER.NEWSVOCAB.forEach(function(w){ add(w.w); });
+  REGISTER.HEADLINES.forEach(function(w){ add(w.w); DATA.clusters(w.w).forEach(add); });
+  STORIES.FABLES.forEach(function(f){
+    f.lines.forEach(function(l){ add(l.t); l.t.split(' ').forEach(add); });
+    add(f.moral.t); f.moral.t.split(' ').forEach(add);
+  });
+  STORIES.AATHICHUDI.forEach(function(a){ add(a.t); });
+  STORIES.KURALS.forEach(function(k){ add(k.a + ' ' + k.b); });
+
+  var list = Array.from(set).sort();
+  var json = JSON.stringify(list);
+  var chars = list.reduce(function(n,t){ return n + t.length; }, 0);
+
+  document.getElementById('out').value = json;
+  document.getElementById('stat').innerHTML =
+    '<b>' + list.length + '</b> clips &middot; <b>' + chars + '</b> characters &middot; ' +
+    'about <b>' + (chars/1000000*100).toFixed(2) + '%</b> of Google’s monthly free tier';
+
+  document.getElementById('copy').onclick = function(){
+    var t = document.getElementById('out'); t.select(); document.execCommand('copy');
+    this.textContent = 'Copied';
+  };
+  document.getElementById('dl').onclick = function(){
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([json], {type:'application/json'}));
+    a.download = 'audio-list.json'; a.click();
+  };
+})();
+</script>
+</body>
+</html>

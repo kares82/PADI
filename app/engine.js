@@ -218,6 +218,21 @@ var Engine = (function () {
       .catch(function(){ /* no recordings, or opened via file:// — fine */ });
   }
 
+  /* One rule for turning displayed text into an audio key, shared by the
+     player and the clip generator so the two can never drift apart.
+     Tapping a word inside a story hands us things like "“un" or
+     "irunthathu." - quotes and a trailing full stop are artefacts of
+     splitting a sentence, not part of the word. Sentence-final
+     punctuation is kept on real sentences, where it carries prosody. */
+  function speakKey(text){
+    var t = String(text == null ? '' : text)
+      .replace(/[“”‘’"']/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (t.indexOf(' ') < 0) t = t.replace(/[.,!?;:—-]+$/, '');
+    return t;
+  }
+
   function playClip(text){
     if (!clips || !clips[text]) return false;
     var a = clipCache[text];
@@ -251,10 +266,12 @@ var Engine = (function () {
 
   function speak(text, rate){
     if (!S.settings.sound) return false;
-    if (playClip(text)) return true;
+    var key = speakKey(text);
+    if (!key) return false;
+    if (playClip(key)) return true;
     if (!('speechSynthesis' in window)) return false;
     try{
-      var u = new SpeechSynthesisUtterance(text);
+      var u = new SpeechSynthesisUtterance(key);
       if (voice) u.voice = voice;
       u.lang = 'ta-IN';
       u.rate = rate || 0.72;
@@ -575,7 +592,7 @@ var Engine = (function () {
     BUILD:BUILD, applyTheme:applyTheme, applyScheme:applyScheme, isDark:isDark, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
     checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
     mastery:mastery, GAPS:GAPS,
-    speak:speak, hasTamilVoice:hasTamilVoice, hasClips:hasClips, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
+    speak:speak, speakKey:speakKey, hasTamilVoice:hasTamilVoice, hasClips:hasClips, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
     Trace:Trace, shuffle:shuffle, sample:sample, pick:pick, toast:toast
   };
 })();

@@ -1,7 +1,24 @@
-The ./audio folder does not exist yet.
+The ./audio folder does not exist yet. Until it does, the app relies on
+whatever Tamil voice the visitor's own device happens to have - and most
+devices have none, so it is silent.
 
-Run  tools\make-audio.ps1  once (after installing a Tamil voice in Windows)
-and it will be created, holding one recording per letter, syllable and word.
-The app picks it up automatically on the next reload.
+To fix that permanently, generate the clips once and commit them.
 
-Without it the app falls back to the browser's own Tamil speech voice.
+  BEST QUALITY  tools/make-audio-google.ps1
+                Google Cloud Text-to-Speech. Needs a free API key.
+                The whole corpus is 561 clips / ~4,400 characters, which
+                is under half a percent of Google's monthly free tier,
+                so a full run costs nothing.
+
+  NO ACCOUNT    tools/make-audio.ps1
+                Uses a Tamil voice installed in Windows. Free, but you
+                have to add the voice first:
+                Settings > Time & Language > Speech > Manage voices
+                > Add voices > Tamil, then reboot.
+
+Both write the same thing: audio/0001.mp3 ... plus audio/index.json,
+which maps each Tamil string to its file. The app picks it up on reload.
+
+The API key is only ever used by the script, on your machine. It is never
+written into the app and never leaves your shell - the deployed site just
+serves static mp3 files.
