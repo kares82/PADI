@@ -1146,7 +1146,7 @@ function renderHome(){
         ? 'You are hearing an approximation. '
         : 'No sound on this device. '}),
       mode === 'approx'
-        ? 'This device has no Tamil voice, so the app is reading its own spelled-out pronunciation aloud in an English voice. It gets the shape of a word right but cannot do the curled letters or ழ properly \u2014 trust the mouth hints in the lessons over what you hear.'
+        ? 'This device has no Tamil voice, so the app is reading its own spelled-out pronunciation aloud in an English voice. It gets the shape of a word roughly right, but English has no retroflex sounds at all — so ல/ள, ண/ந/ன and ர/ற all come out identical, and ழ is only a guess. Those are exactly the letters the Look-alike Clinic exists to teach: trust the mouth hints there, not what you hear here.'
         : 'This device has no speech voices at all, so nothing can be spoken.',
       h('br'), h('br'),
       'For real Tamil audio: on Android install a Tamil voice under Settings \u203a Language \u203a Text-to-speech; on iPhone under Settings \u203a Accessibility \u203a Spoken Content \u203a Voices; on Windows see the README \u2014 one command adds a Tamil voice, and tools/make-audio-google.ps1 bakes proper recordings into the app for everyone.'
