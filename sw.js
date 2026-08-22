@@ -7,6 +7,7 @@ var ASSETS = [
   './index.html',
   './app/style.css',
   './app/data.js',
+  './app/stories.js',
   './app/register.js',
   './app/strokes.js',
   './app/compose.js',

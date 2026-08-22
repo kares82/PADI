@@ -12,7 +12,8 @@ var Engine = (function () {
     units: {},      // unitId -> {done:true, best:n}
     streak: { last:null, days:0 },
     stats: { answers:0, correct:0 },
-    settings: { sound:true, variety:null }
+    settings: { sound:true, variety:null, hideEnglish:false },
+    game: { xp:0, todayXp:0, day:null, goal:60, seenLevel:0, read:{} }
   };
 
   function today(){
@@ -32,11 +33,14 @@ var Engine = (function () {
     if(!S.srs) S.srs={}; if(!S.units) S.units={};
     if(!S.streak) S.streak={last:null,days:0};
     if(!S.stats) S.stats={answers:0,correct:0};
-    if(!S.settings) S.settings={sound:true,variety:null};
+    if(!S.settings) S.settings={sound:true,variety:null,hideEnglish:false};
+    if(!S.game) S.game={xp:0,todayXp:0,day:null,goal:60,seenLevel:0,read:{}};
+    if(!S.game.read) S.game.read={};
     if(S.settings.variety===undefined) S.settings.variety=null;
   }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-  function reset(){ S.srs={}; S.units={}; S.streak={last:null,days:0}; S.stats={answers:0,correct:0}; save(); }
+  function reset(){ S.srs={}; S.units={}; S.streak={last:null,days:0}; S.stats={answers:0,correct:0};
+    S.game={xp:0,todayXp:0,day:null,goal:60,seenLevel:0,read:{}}; save(); }
 
   function touchStreak(){
     var t = today();
@@ -67,8 +71,10 @@ var Engine = (function () {
     if (correct){
       it.ok++; S.stats.correct++;
       it.box = Math.min(it.box+1, GAPS.length-1);
+      award(10 + it.box * 2);          // deeper boxes are worth more
     } else {
       it.bad++; it.box = 0;
+      award(3);                        // getting it wrong is still practice
     }
     it.due = dayNum() + GAPS[it.box];
     save();
@@ -90,6 +96,37 @@ var Engine = (function () {
     for (var id in S.srs){ total++; sum += S.srs[id].box/(GAPS.length-1); }
     return total ? sum/total : 0;
   }
+
+  /* ---------------- experience, levels, daily goal ----------------
+     Points are deliberately generous and impossible to lose. The job
+     of this layer is to make coming back tomorrow feel worth it, not
+     to punish anybody for getting a letter wrong. */
+  function award(n){
+    var t = today();
+    if (S.game.day !== t){ S.game.day = t; S.game.todayXp = 0; }
+    S.game.xp += n;
+    S.game.todayXp += n;
+    save();
+    return S.game.xp;
+  }
+  function todayXp(){ return (S.game.day === today()) ? S.game.todayXp : 0; }
+  function level(){ return STORIES.levelFor(S.game.xp); }
+  function levelInfo(){
+    var i = level(), cur = STORIES.LEVELS[i], next = STORIES.LEVELS[i+1] || null;
+    var floor = cur.xp, ceil = next ? next.xp : cur.xp;
+    return { i:i, cur:cur, next:next,
+             into: S.game.xp - floor,
+             span: next ? (ceil - floor) : 1,
+             pct: next ? Math.min(100, Math.round((S.game.xp - floor) / (ceil - floor) * 100)) : 100 };
+  }
+  /* returns the new level if the learner just crossed a threshold */
+  function checkLevelUp(){
+    var l = level();
+    if (l > (S.game.seenLevel || 0)){ S.game.seenLevel = l; save(); return l; }
+    return -1;
+  }
+  function markRead(id){ S.game.read[id] = true; save(); }
+  function hasRead(id){ return !!S.game.read[id]; }
 
   /* ---------------- audio ----------------
      Two sources, in order of preference:
@@ -406,6 +443,8 @@ var Engine = (function () {
   return {
     S:S, save:save, reset:reset, touchStreak:touchStreak, today:today, dayNum:dayNum,
     itemId:itemId, ensure:ensure, grade:grade, dueItems:dueItems, learnedIds:learnedIds,
+    award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
+    checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
     mastery:mastery, GAPS:GAPS,
     speak:speak, hasTamilVoice:hasTamilVoice, hasClips:hasClips, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
     Trace:Trace, shuffle:shuffle, sample:sample, pick:pick, toast:toast

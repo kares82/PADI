@@ -58,6 +58,35 @@ function bridgeItem(b){
            spoken:REGISTER.col(b, v), spokenSay:REGISTER.say(b, v), same:!!b.same, speak:b.f };
 }
 function variety(){ return Engine.S.settings.variety === 'LK' ? 'LK' : 'IN'; }
+
+/* Render a Tamil sentence with the letters you already know in full ink
+   and the rest faded, so a story visibly sharpens as you learn. Every
+   cluster is tappable to hear it. */
+function livingText(text, cls){
+  var wrap = h('div',{class:'living '+(cls||''), lang:'ta'});
+  text.split(' ').forEach(function(word, wi){
+    if (wi) wrap.appendChild(document.createTextNode(' '));
+    var w = h('span',{class:'lw', onclick:function(){ Engine.speak(word); }});
+    DATA.clusters(word).forEach(function(cl){
+      var base = cl.charAt(0), code = base.charCodeAt(0);
+      // punctuation and quotes are not letters to be learned - never fade them
+      var tamil = code >= 0x0B80 && code <= 0x0BFF;
+      var known = !tamil || !!Engine.S.srs['L:'+base];
+      w.appendChild(h('span',{class: known ? 'kn' : 'un', text:cl}));
+    });
+    wrap.appendChild(w);
+  });
+  return wrap;
+}
+
+function unlockedFables(){
+  return STORIES.FABLES.filter(function(f){
+    return Engine.S.units[f.unlock] && Engine.S.units[f.unlock].done;
+  });
+}
+function newlyUnlocked(unitId){
+  return STORIES.FABLES.filter(function(f){ return f.unlock === unitId && !Engine.hasRead(f.id); });
+}
 function varietyLabel(){ return variety() === 'LK' ? 'Sri Lankan Tamil' : 'Indian Tamil'; }
 
 /* ---------------- exercise generators ---------------- */
@@ -165,6 +194,9 @@ function buildLesson(unit){
     groups.forEach(function(g){
       steps.push({ type:'teachPair', a:letterItem(g[0]), b:letterItem(g[1]),
                    linked: !!DATA.vowel(g[0]).mate });
+      // 800 years ago Avvaiyar wrote one line of advice per letter, in
+      // order. Those twelve lines are exactly these twelve vowels.
+      steps.push({ type:'aathichudi', lines:g.map(STORIES.aathiFor).filter(Boolean) });
       steps.push(exGlyphToSound(letterItem(Engine.pick(g)), pool));
     });
     for (i=0;i<6;i++) steps.push(randomEx(Engine.pick(pool), pool));
@@ -340,6 +372,9 @@ function finishLesson(){
   clear();
   var total = L.right + L.wrong;
   var pct = total ? Math.round(L.right/total*100) : 100;
+  Engine.award(50);
+  var lvlUp = Engine.checkLevelUp();
+  var unlocked = (u.id !== 'review') ? newlyUnlocked(u.id) : [];
   app.appendChild(h('div',{class:'card finish'},[
     h('div',{class:'em', text: pct>=80 ? '🎉' : pct>=50 ? '👍' : '💪'}),
     h('h2',{class:'h1', style:'margin-top:10px', text: u.id==='review' ? 'Review done' : u.title + ' complete'}),
@@ -349,6 +384,37 @@ function finishLesson(){
            : pct>=80 ? 'These are going into your review queue. Come back tomorrow and they will stick.'
                      : 'The ones you missed will come back sooner. That is the whole trick — you do not need to get it right first time.'})
   ]));
+  app.appendChild(xpStrip());
+
+  if (lvlUp > 0){
+    var lv = STORIES.LEVELS[lvlUp];
+    var k  = STORIES.KURALS.filter(function(x){ return x.lvl === lvlUp; })[0];
+    var card = h('div',{class:'card levelup', style:'margin-top:14px'},[
+      h('div',{class:'kicker', style:'color:var(--teal)', text:'New rank'}),
+      h('div',{class:'glyph', style:'font-size:34px;font-weight:600;margin:4px 0', lang:'ta', text:lv.t}),
+      h('div',{class:'roman', style:'font-size:16px', text:lv.r + ' \u00b7 ' + lv.e})
+    ]);
+    if (k) card.appendChild(kuralBlock(k));
+    app.appendChild(card);
+  }
+
+  unlocked.forEach(function(f){
+    app.appendChild(h('button',{class:'card unlock', style:'margin-top:14px;width:100%;text-align:left',
+      onclick:function(){ go('#/story/'+f.id); }},[
+      h('div',{class:'kicker', style:'color:var(--gold-deep)', text:'Story unlocked'}),
+      h('div',{style:'display:flex;align-items:center;gap:12px;margin-top:6px'},[
+        h('div',{style:'font-size:38px'},[f.icon]),
+        h('div',{style:'flex:1;min-width:0'},[
+          h('div',{class:'glyph', style:'font-size:22px;font-weight:600', lang:'ta', text:f.ta}),
+          h('div',{class:'tag', text:f.tar}),
+          h('div',{style:'font-weight:700;font-size:15px;margin-top:2px', text:f.en})
+        ]),
+        h('div',{class:'chev', text:'\u203a'})
+      ]),
+      h('p',{class:'sub', style:'margin-top:8px', text:f.blurb})
+    ]));
+  });
+
   app.appendChild(h('div',{style:'height:14px'}));
   app.appendChild(h('button',{class:'btn', onclick:function(){ go('#/'); }},['Back to the path']));
   Engine.dingOK();
@@ -373,6 +439,7 @@ function drawStep(){
     teachSignGroup:  stepTeachSignGroup,
     teachWord:       stepTeachWord,
     teachPairWords:  stepTeachPairWords,
+    aathichudi:      stepAathichudi,
     endings:         stepEndings,
     teachBridge:     stepTeachBridge,
     swaps:           stepSwaps,
@@ -676,6 +743,26 @@ function stepNewsPattern(s){
   app.appendChild(contBtn());
 }
 
+function stepAathichudi(s){
+  var box = h('div',{class:'card'},[
+    h('div',{class:'kicker', text:'\u0b86\u0ba4\u0bcd\u0ba4\u0bbf\u0b9a\u0bc2\u0b9f\u0bbf \u00b7 aathichudi'}),
+    h('h3',{class:'h1', style:'margin:6px 0 4px', text:'Avvaiyar wrote you a line'}),
+    h('p',{class:'sub', text:'Around 800 years ago the poet Avvaiyar wrote one piece of advice for every letter of the alphabet, in order. Tamil children have opened this book first ever since. You just learned the letters \u2014 so here are the lines.'})
+  ]);
+  s.lines.forEach(function(a){
+    box.appendChild(h('div',{class:'aathi', onclick:function(){ Engine.speak(a.t); }},[
+      h('div',{class:'aletter', lang:'ta', text:a.v}),
+      h('div',{style:'flex:1;min-width:0'},[
+        h('div',{class:'glyph', style:'font-size:23px;font-weight:600;line-height:1.4', lang:'ta', text:a.t}),
+        h('div',{class:'tag', text:a.r}),
+        h('div',{style:'font-size:15px;font-weight:700;margin-top:3px', text:'\u201c' + a.e + '\u201d'})
+      ])
+    ]));
+  });
+  app.appendChild(box);
+  app.appendChild(contBtn());
+}
+
 /* ---------- quiz steps ---------- */
 
 function verdict(ok, msg, extra){
@@ -905,6 +992,31 @@ function stepTrace(s){
     text:'Tip: use a finger on a phone/tablet, or hold the mouse button on a computer. Best of all — copy it onto real paper too.'}));
 }
 
+function xpStrip(){
+  var L2 = Engine.levelInfo();
+  return h('div',{class:'xpbar', style:'margin-top:16px'},[
+    h('div',{style:'display:flex;justify-content:space-between;align-items:baseline'},[
+      h('span',{},[ h('b',{lang:'ta', style:'font-size:16px', text:L2.cur.t}),
+                    h('span',{class:'rom', text:L2.cur.e}) ]),
+      h('span',{class:'tag', text: Engine.S.game.xp + ' XP' + (L2.next ? '  \u00b7  ' + (L2.next.xp - Engine.S.game.xp) + ' to ' + L2.next.e : '') })
+    ]),
+    h('div',{class:'bar', style:'margin-top:6px'},[ h('i',{style:'width:'+L2.pct+'%;background:var(--gold)'}) ])
+  ]);
+}
+
+function kuralBlock(k){
+  return h('div',{class:'kural'},[
+    h('div',{class:'kn', text:'\u0ba4\u0bbf\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bc1\u0bb1\u0bb3\u0bcd  ' + k.n}),
+    h('div',{class:'glyph kl', lang:'ta', text:k.a}),
+    h('div',{class:'glyph kl', lang:'ta', text:k.b}),
+    h('div',{class:'tag', style:'margin-top:6px', text:k.ar}),
+    h('div',{class:'tag', text:k.br}),
+    h('div',{style:'font-weight:700;font-size:15.5px;margin-top:8px', text:'\u201c' + k.e + '\u201d'}),
+    h('div',{class:'sub', style:'font-size:13.5px;margin-top:8px', text:k.note}),
+    h('button',{class:'speaker', style:'margin-top:4px', onclick:function(e){ e.stopPropagation(); Engine.speak(k.a + ' ' + k.b); }},['\ud83d\udd0a'])
+  ]);
+}
+
 /* ---------------- screens ---------------- */
 
 function unitState(idx){
@@ -986,6 +1098,17 @@ function renderHome(){
     h('div',{class:'bar'},[ h('i',{style:'width:'+Math.round(doneCount/DATA.UNITS.length*100)+'%'}) ])
   ]));
 
+  app.appendChild(xpStrip());
+
+  var goal = Engine.S.game.goal || 60, tx = Engine.todayXp();
+  app.appendChild(h('div',{class:'goal'+(tx>=goal?' hit':'')},[
+    h('div',{style:'flex:1'},[
+      h('b',{style:'font-size:15px', text: tx>=goal ? 'Today\u2019s goal done \u2713' : 'Today\u2019s goal'}),
+      h('div',{class:'tag', text: Math.min(tx,goal) + ' / ' + goal + ' XP'})
+    ]),
+    h('div',{class:'bar', style:'flex:1.4'},[ h('i',{style:'width:'+Math.min(100,Math.round(tx/goal*100))+'%;background:'+(tx>=goal?'var(--teal)':'var(--gold)')}) ])
+  ]));
+
   if (due > 0){
     app.appendChild(h('button',{class:'btn teal', style:'margin:12px 0 4px', onclick:function(){ go('#/review'); }},
       ['🔁  Review ' + due + ' item' + (due>1?'s':'') + ' due']));
@@ -1027,6 +1150,11 @@ function renderHome(){
   app.appendChild(h('button',{class:'unit', onclick:function(){ go('#/grid'); }},[
     h('div',{class:'bubble'},['▦']),
     h('div',{class:'t'},[ h('b',{text:'The full 247 chart'}), h('small',{text:'Tap any letter to hear it and see how it is built'}) ]),
+    h('div',{class:'chev', text:'›'})
+  ]));
+  app.appendChild(h('button',{class:'unit', onclick:function(){ go('#/stories'); }},[
+    h('div',{class:'bubble'},['📖']),
+    h('div',{class:'t'},[ h('b',{text:'Stories'}), h('small',{text:'Avvaiyar, the Thirukkural, and five fables \u2014 unlocked as you learn'}) ]),
     h('div',{class:'chev', text:'›'})
   ]));
   app.appendChild(h('button',{class:'unit', onclick:function(){ go('#/write'); }},[
@@ -1100,6 +1228,127 @@ function renderUnit(id){
       ]));
     });
     app.appendChild(pl);
+  }
+}
+
+function renderStories(){
+  clear();
+  top.textContent = 'Stories';
+  back.hidden = true;
+
+  app.appendChild(h('div',{class:'hero'},[
+    h('div',{class:'big', lang:'ta', text:'\u0b95\u0ba4\u0bc8'}),
+    h('div',{style:'font-size:13.5px;font-weight:800;color:var(--gold-deep)', text:'ka-thai \u00b7 story'}),
+    h('p',{class:'sub', style:'margin-top:6px', text:'This is what the letters are for. Real Tamil, some of it two thousand years old, unlocking as you go.'})
+  ]));
+  app.appendChild(xpStrip());
+
+  /* --- Avvaiyar's primer, one line per vowel --- */
+  var got = STORIES.AATHICHUDI.filter(function(a){ return Engine.S.srs['L:'+a.v]; });
+  app.appendChild(h('div',{class:'h2', text:'\u0b86\u0ba4\u0bcd\u0ba4\u0bbf\u0b9a\u0bc2\u0b9f\u0bbf \u00b7 Aathichudi'}));
+  app.appendChild(h('p',{class:'sub', style:'margin:-4px 0 10px', text:'Avvaiyar, around 800 years ago: one line of advice per letter. ' + got.length + ' of 12 unlocked.'}));
+  var al = h('div',{class:'card', style:'padding:6px 14px'});
+  STORIES.AATHICHUDI.forEach(function(a){
+    var known = !!Engine.S.srs['L:'+a.v];
+    al.appendChild(h('div',{class:'aathi'+(known?'':' locked'), onclick:function(){ if(known) Engine.speak(a.t); }},[
+      h('div',{class:'aletter', lang:'ta', text:a.v}),
+      known
+        ? h('div',{style:'flex:1;min-width:0'},[
+            h('div',{class:'glyph', style:'font-size:20px;font-weight:600', lang:'ta', text:a.t}),
+            h('div',{class:'tag', text:a.r}),
+            h('div',{style:'font-size:14px;font-weight:700;margin-top:2px', text:a.e})
+          ])
+        : h('div',{style:'flex:1;color:var(--muted);font-size:14px;font-weight:700'},['Learn ', h('span',{lang:'ta',text:a.v}), ' to unlock'])
+    ]));
+  });
+  app.appendChild(al);
+
+  /* --- fables --- */
+  app.appendChild(h('div',{class:'h2', text:'Fables'}));
+  STORIES.FABLES.forEach(function(f){
+    var open = Engine.S.units[f.unlock] && Engine.S.units[f.unlock].done;
+    var uname = '';
+    DATA.UNITS.forEach(function(x){ if (x.id === f.unlock) uname = x.title; });
+    app.appendChild(h('button',{class:'unit'+(open?'':' locked'), onclick:function(){
+      if (!open){ Engine.toast('Finish \u201c' + uname + '\u201d to unlock this'); return; }
+      go('#/story/'+f.id);
+    }},[
+      h('div',{class:'bubble', style:'font-size:28px'},[ open ? f.icon : '\ud83d\udd12' ]),
+      h('div',{class:'t'},[
+        h('b',{},[ h('span',{lang:'ta', text:f.ta}) ]),
+        h('small',{text: open ? (f.en + (Engine.hasRead(f.id) ? '  \u00b7  read \u2713' : '')) : ('Unlocks after \u201c' + uname + '\u201d')})
+      ]),
+      h('div',{class:'chev', text:'\u203a'})
+    ]));
+  });
+
+  /* --- kural --- */
+  var lvl = Engine.level();
+  var ks = STORIES.KURALS.filter(function(k){ return k.lvl <= lvl; });
+  app.appendChild(h('div',{class:'h2', text:'\u0ba4\u0bbf\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bc1\u0bb1\u0bb3\u0bcd \u00b7 Thirukkural'}));
+  app.appendChild(h('p',{class:'sub', style:'margin:-4px 0 10px', text:'Thiruvalluvar, roughly two thousand years old. One couplet per rank. ' + ks.length + ' of ' + STORIES.KURALS.length + ' unlocked.'}));
+  if (!ks.length) app.appendChild(h('div',{class:'note', text:'Earn your first rank to unlock the opening couplet.'}));
+  ks.forEach(function(k){ app.appendChild(h('div',{class:'card', style:'margin-bottom:10px'},[ kuralBlock(k) ])); });
+}
+
+function renderStory(id){
+  var f = STORIES.fable(id);
+  if (!f) return renderStories();
+  var open = Engine.S.units[f.unlock] && Engine.S.units[f.unlock].done;
+  if (!open) return renderStories();
+
+  clear();
+  top.textContent = f.en;
+  back.hidden = false;
+  var hideEn = Engine.S.settings.hideEnglish;
+
+  app.appendChild(h('div',{class:'card center'},[
+    h('div',{style:'font-size:52px;line-height:1'},[f.icon]),
+    h('div',{class:'glyph', style:'font-size:28px;font-weight:600;margin-top:6px', lang:'ta', text:f.ta}),
+    h('div',{class:'roman', style:'font-size:15px', text:f.tar}),
+    h('div',{style:'font-weight:700;margin-top:4px', text:f.en}),
+    h('p',{class:'sub', style:'margin-top:8px', text:f.blurb})
+  ]));
+
+  app.appendChild(h('button',{class:'btn ghost sm', style:'width:100%;margin-top:12px', onclick:function(){
+    Engine.S.settings.hideEnglish = !Engine.S.settings.hideEnglish; Engine.save(); renderStory(id);
+  }},[ hideEn ? 'Show the English' : 'Hide the English \u2014 test yourself' ]));
+
+  var body = h('div',{class:'card', style:'margin-top:12px'});
+  f.lines.forEach(function(ln, i){
+    body.appendChild(h('div',{class:'sline'},[
+      h('div',{class:'snum', text:String(i+1)}),
+      h('div',{style:'flex:1;min-width:0'},[
+        livingText(ln.t, 'big'),
+        h('div',{class:'tag', style:'margin-top:3px', text:ln.r}),
+        hideEn ? null : h('div',{class:'sen', text:ln.e})
+      ]),
+      h('button',{class:'speaker', onclick:function(){ Engine.speak(ln.t); }},['\ud83d\udd0a'])
+    ]));
+  });
+  app.appendChild(body);
+
+  app.appendChild(h('div',{class:'card moral', style:'margin-top:12px'},[
+    h('div',{class:'kicker', style:'color:var(--teal)', text:'\u0baa\u0b9f\u0bbf\u0baa\u0bcd\u0baa\u0bbf\u0ba9\u0bc8 \u00b7 the moral'}),
+    livingText(f.moral.t, 'big'),
+    h('div',{class:'tag', style:'margin-top:3px', text:f.moral.r}),
+    h('div',{style:'font-weight:700;font-size:16px;margin-top:6px', text:'\u201c' + f.moral.e + '\u201d'}),
+    h('button',{class:'speaker', onclick:function(){ Engine.speak(f.moral.t); }},['\ud83d\udd0a'])
+  ]));
+
+  app.appendChild(h('div',{class:'note', style:'margin-top:12px'},[
+    h('b',{text:'Bright letters are ones you already know. '}),
+    'The faded ones are still ahead of you. Come back after the next unit and watch the page light up. Tap any word to hear it.'
+  ]));
+
+  if (!Engine.hasRead(f.id)){
+    app.appendChild(h('button',{class:'btn teal', style:'margin-top:14px', onclick:function(){
+      Engine.markRead(f.id); Engine.award(80); Engine.dingOK();
+      Engine.toast('+80 XP \u2014 story finished');
+      go('#/stories');
+    }},['I have read it  \u00b7  +80 XP']));
+  } else {
+    app.appendChild(h('div',{class:'pill', style:'display:block;text-align:center;margin-top:14px', text:'\u2713 read'}));
   }
 }
 
@@ -1309,6 +1558,8 @@ function route(){
 
   if (!parts.length){ curTab='/'; renderHome(); }
   else if (parts[0] === 'unit'){ curTab='/'; renderUnit(parts[1]); }
+  else if (parts[0] === 'stories'){ curTab='stories'; renderStories(); }
+  else if (parts[0] === 'story'){ curTab='stories'; renderStory(parts[1]); }
   else if (parts[0] === 'grid'){ curTab='grid'; renderGrid(); }
   else if (parts[0] === 'review'){ curTab='review'; renderReview(); }
   else if (parts[0] === 'write'){ curTab='write'; renderWrite(qs); }
