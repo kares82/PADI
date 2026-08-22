@@ -1152,6 +1152,12 @@ function renderHome(){
     h('div',{class:'t'},[ h('b',{text:'The full 247 chart'}), h('small',{text:'Tap any letter to hear it and see how it is built'}) ]),
     h('div',{class:'chev', text:'›'})
   ]));
+  app.appendChild(h('button',{class:'unit', onclick:function(){ go('#/themes'); }},[
+    h('div',{class:'bubble'},['🎨']),
+    h('div',{class:'t'},[ h('b',{text:'Colours'}),
+      h('small',{text:'Five themes — currently ' + (THEMES.filter(function(x){return x.id===(Engine.S.settings.theme||'ink');})[0]||{t:'Ink & Paper'}).t }) ]),
+    h('div',{class:'chev', text:'›'})
+  ]));
   app.appendChild(h('button',{class:'unit', onclick:function(){ go('#/stories'); }},[
     h('div',{class:'bubble'},['📖']),
     h('div',{class:'t'},[ h('b',{text:'Stories'}), h('small',{text:'Avvaiyar, the Thirukkural, and five fables \u2014 unlocked as you learn'}) ]),
@@ -1229,6 +1235,60 @@ function renderUnit(id){
     });
     app.appendChild(pl);
   }
+}
+
+var THEMES = [
+  { id:'ink',      t:'Ink & Paper', ta:'மை', tar:'mai · ink',        note:'Crisp white, near-black type, indigo. Maximum contrast — the easiest to read.' },
+  { id:'kolam',    t:'Kolam',       ta:'கோலம்', tar:'koa-lam', note:'Midnight blue and saffron, after the patterns drawn in rice flour at dawn.' },
+  { id:'mayil',    t:'Mayil',       ta:'மயில்', tar:'ma-yil · peacock', note:'Deep peacock teal. The state bird, and the colour of the feather.' },
+  { id:'malligai', t:'Malligai',    ta:'மல்லிகை', tar:'mal-li-gai · jasmine', note:'White and garden green. Light and calm.' },
+  { id:'suvadi',   t:'Suvadi',      ta:'சுவடி', tar:'su-va-di · palm leaf', note:'The original warm parchment, if you ever want it back.' }
+];
+
+function renderThemes(){
+  clear();
+  top.textContent = 'Colours';
+  back.hidden = false;
+
+  app.appendChild(h('p',{class:'sub', style:'margin-bottom:14px',
+    text:'Tap one to try it. It changes instantly and everywhere — including the coloured letters in Unit 0. Each also has its own dark version, which follows your phone.'}));
+
+  THEMES.forEach(function(th){
+    var on = (Engine.S.settings.theme || 'ink') === th.id;
+    var sw = h('div',{class:'swatches'});
+    // paint the swatches from the theme's own tokens by borrowing a probe node
+    var probe = document.createElement('div');
+    probe.setAttribute('data-theme', th.id);
+    probe.style.display = 'none';
+    document.body.appendChild(probe);
+    var cs = getComputedStyle(probe);
+    ['--paper','--ink','--gold','--teal'].forEach(function(v){
+      sw.appendChild(h('i',{style:'background:'+cs.getPropertyValue(v).trim()}));
+    });
+    probe.remove();
+
+    app.appendChild(h('button',{class:'theme'+(on?' on':''), onclick:function(){
+      Engine.applyTheme(th.id);
+      Engine.toast(th.t);
+      renderThemes();
+    }},[
+      h('div',{style:'display:flex;align-items:center;gap:12px'},[
+        h('div',{style:'flex:1;min-width:0'},[
+          h('div',{style:'display:flex;align-items:baseline;gap:8px;flex-wrap:wrap'},[
+            h('b',{style:'font-size:17px', text:th.t}),
+            h('span',{class:'glyph', style:'font-size:17px;opacity:.7', lang:'ta', text:th.ta}),
+            on ? h('span',{class:'pill', style:'font-size:11px', text:'in use'}) : null
+          ]),
+          h('div',{class:'tag', text:th.tar})
+        ]),
+        sw
+      ]),
+      h('small',{style:'display:block;color:var(--muted);font-size:13.5px;font-weight:600;margin-top:8px', text:th.note})
+    ]));
+  });
+
+  app.appendChild(h('div',{class:'note', style:'margin-top:14px',
+    text:'Dark or light is decided by your phone or computer, not here. Every theme has both.'}));
 }
 
 function renderStories(){
@@ -1558,6 +1618,7 @@ function route(){
 
   if (!parts.length){ curTab='/'; renderHome(); }
   else if (parts[0] === 'unit'){ curTab='/'; renderUnit(parts[1]); }
+  else if (parts[0] === 'themes'){ curTab='/'; renderThemes(); }
   else if (parts[0] === 'stories'){ curTab='stories'; renderStories(); }
   else if (parts[0] === 'story'){ curTab='stories'; renderStory(parts[1]); }
   else if (parts[0] === 'grid'){ curTab='grid'; renderGrid(); }

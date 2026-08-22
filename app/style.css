@@ -6,39 +6,115 @@
    ============================================================ */
 
 :root{
-  --paper:#FDF8F0;
-  --paper-2:#F6EEE1;
-  --card:#FFFFFF;
-  --ink:#2B2118;
-  --ink-2:#6B5B49;
-  --muted:#8B7A66;
-  --line:#E7DBC7;
-  --gold:#E8A33D;
-  --gold-deep:#C4801E;
-  --teal:#1F7A6B;
-  --teal-soft:#E4F1EE;
-  --red:#C2452D;
-  --red-soft:#FBEAE6;
-  --violet:#6B4E9E;
-
   --r-lg:22px;
   --r-md:16px;
   --r-sm:11px;
-  --shadow:0 2px 0 rgba(43,33,24,.07), 0 10px 28px -18px rgba(43,33,24,.5);
+  --shadow:0 2px 0 rgba(16,24,40,.05), 0 10px 28px -18px rgba(16,24,40,.45);
   --tap:60px;
-
   --ta:"Noto Sans Tamil","Nirmala UI","Latha","Tamil Sangam MN",sans-serif;
   --ui:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 
-@media (prefers-color-scheme: dark){
-  :root{
-    --paper:#191512; --paper-2:#221C17; --card:#241E19; --ink:#F5EDE2;
-    --ink-2:#C9BAA7; --muted:#9E8D79; --line:#3A3026;
-    --teal-soft:#12312C; --red-soft:#3A1E18;
-    --shadow:0 2px 0 rgba(0,0,0,.3), 0 10px 28px -18px #000;
-  }
+/* ============================================================
+   Themes. Every colour in the app comes from these tokens, so a
+   theme is one block of variables and nothing else. The choice is
+   written to <html data-theme> before first paint.
+   ============================================================ */
+
+/* ---------- Ink & Paper (default) ---------- */
+:root, :root[data-theme="ink"]{
+  --paper:#FFFFFF; --paper-2:#F1F4F9; --card:#FFFFFF;
+  --ink:#0F172A; --ink-2:#475569; --muted:#7C8CA3; --line:#E2E8F0;
+  --gold:#4F46E5; --gold-deep:#4338CA; --gold-shade:#3730A3; --on-gold:#FFFFFF;
+  --teal:#047857; --teal-shade:#065F46; --teal-soft:#ECFDF5; --teal-line:#A7E3C8;
+  --red:#DC2626; --red-soft:#FEF2F2; --red-line:#F6C6C2;
+  --hero-a:#EEF2FF; --hero-b:#E0E7FF; --hero-line:#C7D2FE;
 }
+@media (prefers-color-scheme: dark){ :root, :root[data-theme="ink"]{
+  --paper:#0B1020; --paper-2:#161C2D; --card:#131A2A;
+  --ink:#E9EEF7; --ink-2:#AFBACB; --muted:#78889F; --line:#262F42;
+  --gold:#6366F1; --gold-deep:#A5B4FC; --gold-shade:#4338CA; --on-gold:#FFFFFF;
+  --teal:#10B981; --teal-shade:#059669; --teal-soft:#0B2A22; --teal-line:#155E48;
+  --red:#F87171; --red-soft:#2C1416; --red-line:#5B2422;
+  --hero-a:#1B2340; --hero-b:#141A2E; --hero-line:#2B3557;
+  --shadow:0 2px 0 rgba(0,0,0,.3), 0 10px 28px -18px #000;
+} }
+
+/* ---------- Kolam: midnight and saffron ---------- */
+:root[data-theme="kolam"]{
+  --paper:#F8F9FC; --paper-2:#ECEFF6; --card:#FFFFFF;
+  --ink:#131A33; --ink-2:#4B5578; --muted:#8A93AE; --line:#DDE2EE;
+  --gold:#E8912B; --gold-deep:#B96F17; --gold-shade:#9A5B10; --on-gold:#24160A;
+  --teal:#0F766E; --teal-shade:#115E59; --teal-soft:#ECFDFA; --teal-line:#9BDDD5;
+  --red:#DC2626; --red-soft:#FEF2F2; --red-line:#F6C6C2;
+  --hero-a:#FFF3E0; --hero-b:#FFE7C4; --hero-line:#F5D3A0;
+}
+@media (prefers-color-scheme: dark){ :root[data-theme="kolam"]{
+  --paper:#070B1A; --paper-2:#111838; --card:#0E1430;
+  --ink:#EDF0FA; --ink-2:#B3BCD8; --muted:#7A85A6; --line:#212A50;
+  --gold:#FFB43D; --gold-deep:#FFC773; --gold-shade:#C9832A; --on-gold:#241505;
+  --teal:#2DD4BF; --teal-shade:#14B8A6; --teal-soft:#06251F; --teal-line:#12564C;
+  --red:#FB7185; --red-soft:#2B1018; --red-line:#59202E;
+  --hero-a:#151E46; --hero-b:#0D1330; --hero-line:#2A3566;
+  --shadow:0 2px 0 rgba(0,0,0,.35), 0 10px 28px -18px #000;
+} }
+
+/* ---------- Mayil: peacock ---------- */
+:root[data-theme="mayil"]{
+  --paper:#F5FCFC; --paper-2:#E3F1F2; --card:#FFFFFF;
+  --ink:#062B31; --ink-2:#3A6169; --muted:#79999F; --line:#CDE5E7;
+  --gold:#0E7C86; --gold-deep:#0A5B63; --gold-shade:#084A51; --on-gold:#FFFFFF;
+  --teal:#15803D; --teal-shade:#166534; --teal-soft:#ECFDF3; --teal-line:#A3E0BA;
+  --red:#C2410C; --red-soft:#FFF4ED; --red-line:#F5C6A5;
+  --hero-a:#E6F7F8; --hero-b:#D2EFF1; --hero-line:#AEDFE3;
+}
+@media (prefers-color-scheme: dark){ :root[data-theme="mayil"]{
+  --paper:#041519; --paper-2:#0A252B; --card:#071D22;
+  --ink:#E4F5F6; --ink-2:#A6C8CC; --muted:#6D9198; --line:#123840;
+  --gold:#2DD4BF; --gold-deep:#5EEAD4; --gold-shade:#14B8A6; --on-gold:#04211E;
+  --teal:#4ADE80; --teal-shade:#22C55E; --teal-soft:#062A16; --teal-line:#14532D;
+  --red:#FB923C; --red-soft:#2A1408; --red-line:#5A2C10;
+  --hero-a:#0A2A30; --hero-b:#061D22; --hero-line:#154149;
+  --shadow:0 2px 0 rgba(0,0,0,.35), 0 10px 28px -18px #000;
+} }
+
+/* ---------- Malligai: jasmine ---------- */
+:root[data-theme="malligai"]{
+  --paper:#FBFDF8; --paper-2:#EFF5E9; --card:#FFFFFF;
+  --ink:#16261A; --ink-2:#48604D; --muted:#85997F; --line:#DDE8D6;
+  --gold:#3F8F43; --gold-deep:#2F6B33; --gold-shade:#255529; --on-gold:#FFFFFF;
+  --teal:#0E7490; --teal-shade:#155E75; --teal-soft:#ECFEFF; --teal-line:#A5DDE9;
+  --red:#C0392B; --red-soft:#FDF0EE; --red-line:#EFC0B9;
+  --hero-a:#F0F9EA; --hero-b:#E2F2D8; --hero-line:#C9E3B9;
+}
+@media (prefers-color-scheme: dark){ :root[data-theme="malligai"]{
+  --paper:#08130B; --paper-2:#112016; --card:#0D1A11;
+  --ink:#E8F3E7; --ink-2:#B0C8B2; --muted:#7C9680; --line:#1E3524;
+  --gold:#6EC46F; --gold-deep:#A6E3A1; --gold-shade:#4E9E52; --on-gold:#08210A;
+  --teal:#38BDF8; --teal-shade:#0EA5E9; --teal-soft:#06232E; --teal-line:#0C4A6E;
+  --red:#F87171; --red-soft:#2A1414; --red-line:#57221F;
+  --hero-a:#122A17; --hero-b:#0C1D0F; --hero-line:#20422A;
+  --shadow:0 2px 0 rgba(0,0,0,.35), 0 10px 28px -18px #000;
+} }
+
+/* ---------- Suvadi: the original palm leaf ---------- */
+:root[data-theme="suvadi"]{
+  --paper:#FDF8F0; --paper-2:#F6EEE1; --card:#FFFFFF;
+  --ink:#2B2118; --ink-2:#6B5B49; --muted:#8B7A66; --line:#E7DBC7;
+  --gold:#E8A33D; --gold-deep:#C4801E; --gold-shade:#A66A14; --on-gold:#3A2603;
+  --teal:#1F7A6B; --teal-shade:#14574C; --teal-soft:#E4F1EE; --teal-line:#B9DCD4;
+  --red:#C2452D; --red-soft:#FBEAE6; --red-line:#F0C8BE;
+  --hero-a:#FFF6E6; --hero-b:#FDECD2; --hero-line:#F0DCB8;
+}
+@media (prefers-color-scheme: dark){ :root[data-theme="suvadi"]{
+  --paper:#191512; --paper-2:#221C17; --card:#241E19;
+  --ink:#F5EDE2; --ink-2:#C9BAA7; --muted:#9E8D79; --line:#3A3026;
+  --gold:#E8A33D; --gold-deep:#E8A33D; --gold-shade:#A66A14; --on-gold:#241505;
+  --teal:#3FBFA6; --teal-shade:#1F7A6B; --teal-soft:#12312C; --teal-line:#1F5348;
+  --red:#E8776A; --red-soft:#3A1E18; --red-line:#5E2E24;
+  --hero-a:#2C2318; --hero-b:#241C13; --hero-line:#3D3020;
+  --shadow:0 2px 0 rgba(0,0,0,.3), 0 10px 28px -18px #000;
+} }
 
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -104,15 +180,15 @@ body{
 .btn{
   display:flex;align-items:center;justify-content:center;gap:10px;
   width:100%; min-height:var(--tap); padding:14px 18px; border:0; border-radius:var(--r-md);
-  background:var(--gold); color:#3A2603; font-weight:800; font-size:18px; cursor:pointer;
-  box-shadow:0 3px 0 var(--gold-deep); transition:transform .06s, box-shadow .06s;
+  background:var(--gold); color:var(--on-gold); font-weight:800; font-size:18px; cursor:pointer;
+  box-shadow:0 3px 0 var(--gold-shade); transition:transform .06s, box-shadow .06s;
   font-family:var(--ui);
 }
-.btn:active{transform:translateY(3px); box-shadow:0 0 0 var(--gold-deep)}
+.btn:active{transform:translateY(3px); box-shadow:0 0 0 var(--gold-shade)}
 .btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:2px solid var(--line)}
 .btn.ghost:active{transform:none;background:var(--paper-2)}
-.btn.teal{background:var(--teal);color:#fff;box-shadow:0 3px 0 #14574C}
-.btn.teal:active{box-shadow:0 0 0 #14574C}
+.btn.teal{background:var(--teal);color:#fff;box-shadow:0 3px 0 var(--teal-shade)}
+.btn.teal:active{box-shadow:0 0 0 var(--teal-shade)}
 .btn[disabled]{opacity:.4;pointer-events:none}
 .btn.sm{min-height:44px;font-size:15px;padding:8px 14px;width:auto}
 
@@ -136,10 +212,9 @@ body{
 
 /* ---------- home / path ---------- */
 .hero{
-  background:linear-gradient(150deg, #FFF6E6, #FDECD2);
-  border:1px solid #F0DCB8; border-radius:var(--r-lg); padding:20px; margin-bottom:8px;
+  background:linear-gradient(150deg, var(--hero-a), var(--hero-b));
+  border:1px solid var(--hero-line); border-radius:var(--r-lg); padding:20px; margin-bottom:8px;
 }
-@media (prefers-color-scheme: dark){ .hero{background:linear-gradient(150deg,#2C2318,#241C13);border-color:#3D3020} }
 .hero .big{font-size:40px;font-family:var(--ta);line-height:1}
 .streak{display:flex;gap:18px;margin-top:14px}
 .streak div{font-size:13px;color:var(--ink-2);font-weight:700}
@@ -157,8 +232,8 @@ body{
   background:var(--paper-2); border:1px solid var(--line);
   font-family:var(--ta); font-size:26px; font-weight:600; color:var(--ink-2);
 }
-.unit.done .bubble{background:var(--teal-soft);border-color:#B9DCD4;color:var(--teal)}
-.unit.next .bubble{background:var(--gold);border-color:var(--gold-deep);color:#3A2603}
+.unit.done .bubble{background:var(--teal-soft);border-color:var(--teal-line);color:var(--teal)}
+.unit.next .bubble{background:var(--gold);border-color:var(--gold-deep);color:var(--on-gold)}
 .unit.locked{opacity:.5}
 .unit .t{flex:1;min-width:0}
 .unit .t b{display:block;font-size:17px;font-weight:800}
@@ -199,15 +274,15 @@ body{
   border:1px solid var(--line); background:var(--card);
   box-shadow:0 -10px 30px -20px rgba(43,33,24,.7);
 }
-.verdict.ok{background:var(--teal-soft);border-color:#B9DCD4}
-.verdict.no{background:var(--red-soft);border-color:#F0C8BE}
+.verdict.ok{background:var(--teal-soft);border-color:var(--teal-line)}
+.verdict.no{background:var(--red-soft);border-color:var(--red-line)}
 .verdict .msg{font-weight:800;font-size:18px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .verdict.ok .msg{color:var(--teal)} .verdict.no .msg{color:var(--red)}
 
 /* ---------- rule cards (the reveal) ---------- */
 .rule{padding:22px}
 .rule .n{
-  width:38px;height:38px;border-radius:12px;background:var(--gold);color:#3A2603;
+  width:38px;height:38px;border-radius:12px;background:var(--gold);color:var(--on-gold);
   display:grid;place-items:center;font-weight:800;font-size:18px;margin-bottom:14px
 }
 .rule h3{margin:0 0 8px;font-size:21px;font-weight:800;line-height:1.25}
@@ -332,9 +407,9 @@ table.chart td.hl{background:var(--teal-soft);color:var(--teal)}
   display:grid; place-items:center; font-size:12px; font-weight:800; color:var(--muted);
 }
 .sen{font-size:14.5px; font-weight:600; color:var(--ink-2); margin-top:4px}
-.moral{background:var(--teal-soft); border-color:#B9DCD4; text-align:center}
+.moral{background:var(--teal-soft); border-color:var(--teal-line); text-align:center}
 .unlock{border-color:var(--gold); cursor:pointer; display:block}
-.levelup{background:var(--teal-soft); border-color:#B9DCD4; text-align:center}
+.levelup{background:var(--teal-soft); border-color:var(--teal-line); text-align:center}
 
 .aathi{display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer}
 .aathi:last-child{border-bottom:0}
@@ -352,4 +427,15 @@ table.chart td.hl{background:var(--teal-soft);color:var(--teal)}
 .xpbar{background:var(--card); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 14px}
 .goal{display:flex; align-items:center; gap:14px; background:var(--card); border:1px solid var(--line);
       border-radius:var(--r-md); padding:12px 14px; margin-top:10px}
-.goal.hit{background:var(--teal-soft); border-color:#B9DCD4}
+.goal.hit{background:var(--teal-soft); border-color:var(--teal-line)}
+
+/* ---------- theme picker ---------- */
+.theme{
+  display:block; width:100%; text-align:left; font-family:var(--ui); color:var(--ink);
+  background:var(--card); border:2px solid var(--line); border-radius:var(--r-lg);
+  padding:15px; margin-bottom:11px; cursor:pointer; box-shadow:var(--shadow);
+}
+.theme.on{border-color:var(--gold)}
+.theme:active{transform:scale(.99)}
+.swatches{display:flex; gap:0; flex:0 0 auto; border-radius:9px; overflow:hidden; border:1px solid var(--line)}
+.swatches i{display:block; width:26px; height:34px}

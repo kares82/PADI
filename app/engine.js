@@ -12,7 +12,7 @@ var Engine = (function () {
     units: {},      // unitId -> {done:true, best:n}
     streak: { last:null, days:0 },
     stats: { answers:0, correct:0 },
-    settings: { sound:true, variety:null, hideEnglish:false },
+    settings: { sound:true, variety:null, hideEnglish:false, theme:'ink' },
     game: { xp:0, todayXp:0, day:null, goal:60, seenLevel:0, read:{} }
   };
 
@@ -33,7 +33,8 @@ var Engine = (function () {
     if(!S.srs) S.srs={}; if(!S.units) S.units={};
     if(!S.streak) S.streak={last:null,days:0};
     if(!S.stats) S.stats={answers:0,correct:0};
-    if(!S.settings) S.settings={sound:true,variety:null,hideEnglish:false};
+    if(!S.settings) S.settings={sound:true,variety:null,hideEnglish:false,theme:'ink'};
+    if(!S.settings.theme) S.settings.theme='ink';
     if(!S.game) S.game={xp:0,todayXp:0,day:null,goal:60,seenLevel:0,read:{}};
     if(!S.game.read) S.game.read={};
     if(S.settings.variety===undefined) S.settings.variety=null;
@@ -215,6 +216,20 @@ var Engine = (function () {
   function dingNo(){ tone([200], 0.24); }
   function buzz(ms){ if (navigator.vibrate) try{ navigator.vibrate(ms); }catch(e){} }
 
+  /* ---------------- theme ---------------- */
+  function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function themeInk(alpha){
+    var m = String(cssVar('--ink') || '#0F172A').replace('#','');
+    if (m.length === 3) m = m[0]+m[0]+m[1]+m[1]+m[2]+m[2];
+    return 'rgba(' + parseInt(m.slice(0,2),16) + ',' + parseInt(m.slice(2,4),16) + ','
+                   + parseInt(m.slice(4,6),16) + ',' + alpha + ')';
+  }
+  function applyTheme(name){
+    if (name) S.settings.theme = name;
+    document.documentElement.setAttribute('data-theme', S.settings.theme || 'ink');
+    if (name) save();
+  }
+
   /* ---------------- trace canvas ---------------- */
   /* Renders a ghost glyph, lets the user draw over it, and scores
      how much of the glyph's ink they covered vs how much they
@@ -265,15 +280,13 @@ var Engine = (function () {
       ink = (x1 < 0) ? null : { x:x0/dpr, y:y0/dpr, w:(x1-x0)/dpr, h:(y1-y0)/dpr };
       gx.clearRect(0,0,size,size);
       gx.font = font; gx.textAlign='center'; gx.textBaseline='middle';
-      gx.fillStyle = matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'rgba(245,237,226,0.30)' : 'rgba(43,33,24,0.20)';
+      gx.fillStyle = themeInk(matchMedia('(prefers-color-scheme: dark)').matches ? 0.30 : 0.20);
       gx.fillText(glyph, size/2, size*0.53);
     }
     buildMask();
 
     ux.lineWidth = brush; ux.lineCap='round'; ux.lineJoin='round';
-    ux.strokeStyle = '#2B2118';
-    if (matchMedia('(prefers-color-scheme: dark)').matches) ux.strokeStyle = '#F5EDE2';
+    ux.strokeStyle = themeInk(1);
 
     var drawing=false, last=null, any=false;
     function pt(e){
@@ -437,13 +450,14 @@ var Engine = (function () {
   }
 
   load();
+  applyTheme();
   initVoices();
   loadClips();
 
   return {
     S:S, save:save, reset:reset, touchStreak:touchStreak, today:today, dayNum:dayNum,
     itemId:itemId, ensure:ensure, grade:grade, dueItems:dueItems, learnedIds:learnedIds,
-    award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
+    applyTheme:applyTheme, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
     checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
     mastery:mastery, GAPS:GAPS,
     speak:speak, hasTamilVoice:hasTamilVoice, hasClips:hasClips, dingOK:dingOK, dingNo:dingNo, buzz:buzz,

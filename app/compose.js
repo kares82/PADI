@@ -24,11 +24,22 @@ var Compose = (function () {
   var FONT  = '"Noto Sans Tamil","Nirmala UI","Latha","Tamil Sangam MN",sans-serif';
   var cache = {};
 
-  function dark(){ return matchMedia('(prefers-color-scheme: dark)').matches; }
+  function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function rgb(hex, fallback){
+    var m = String(hex || '').replace('#','');
+    if (m.length === 3) m = m[0]+m[0]+m[1]+m[1]+m[2]+m[2];
+    if (m.length !== 6) return fallback;
+    return [parseInt(m.slice(0,2),16), parseInt(m.slice(2,4),16), parseInt(m.slice(4,6),16)];
+  }
+  /* the base letter takes the page's ink, the added mark the accent,
+     so the picture recolours itself with whatever theme is chosen */
   function colours(){
-    return dark()
-      ? { base:[245,237,226], mark:[232,163,61] }
-      : { base:[43,33,24],    mark:[196,128,30] };
+    return { base: rgb(cssVar('--ink'), [15,23,42]),
+             mark: rgb(cssVar('--gold-deep'), [67,56,202]) };
+  }
+  function themeKey(){
+    return (document.documentElement.getAttribute('data-theme') || 'ink') +
+           (matchMedia('(prefers-color-scheme: dark)').matches ? 'd' : 'l');
   }
 
   function build(base, sign, px){
@@ -100,7 +111,7 @@ var Compose = (function () {
      `sign` may be '' (just the bare letter) or the pulli. */
   function el(base, sign, px){
     px = px || 60;
-    var key = base + '|' + sign + '|' + px + '|' + (dark() ? 'd' : 'l');
+    var key = base + '|' + sign + '|' + px + '|' + themeKey();
     if (!cache[key]){
       var c = build(base, sign, px);
       cache[key] = c ? c.toDataURL() : null;
