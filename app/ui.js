@@ -392,18 +392,82 @@ function contBtn(label){
 /* ---------- teaching steps ---------- */
 
 function stepRule(s){
-  var d = h('div',{class:'demo'});
-  s.rule.demo.forEach(function(p){
-    if (p.op) d.appendChild(h('span',{class:'op', text:p.op}));
-    else d.appendChild(h('div',{class:'u'},[ ta(p.g), h('span',{class:'lbl', text:p.l}) ]));
-  });
-  app.appendChild(h('div',{class:'card rule'},[
+  var r = s.rule, viz = h('div',{class:'viz'});
+
+  function pair(base, sign, label){
+    var w = h('div',{class:'vcell'});
+    w.appendChild(Compose.el(base, sign, 54));
+    w.appendChild(h('span',{class:'vlbl', text:label}));
+    return w;
+  }
+
+  if (r.viz === 'oneLetter'){
+    viz.appendChild(h('div',{class:'vcell'},[
+      ta('\u0b95','glyph-xl'),
+      h('div',{},[ h('span',{class:'roman', style:'font-size:26px', text:'ka'}), spk('\u0b95', true) ])
+    ]));
+  }
+
+  else if (r.viz === 'oneMark'){
+    var on = true;
+    var slot = h('div',{class:'vcell', style:'cursor:pointer'});
+    var cap  = h('div',{class:'roman', style:'font-size:24px;margin-top:6px'});
+    function paint(){
+      slot.innerHTML = '';
+      slot.appendChild(Compose.el(r.base, on ? r.sign : '', 96));
+      cap.textContent = on ? r.to : r.from;
+    }
+    slot.addEventListener('click', function(){ on = !on; paint(); Engine.speak(r.base + (on ? r.sign : '')); });
+    paint();
+    viz.appendChild(h('div',{style:'text-align:center'},[
+      slot, cap,
+      h('div',{class:'tag', style:'margin-top:6px', text: 'tap to add or remove the mark'})
+    ]));
+  }
+
+  else if (r.viz === 'twelve'){
+    viz.className = 'viz wrap';
+    var cols = [{s:'',v:'ka'}].concat(DATA.SIGNS.slice(1).map(function(sg){
+      return { s:sg.s, v:DATA.cons(r.base).r + sg.r };
+    }));
+    cols.forEach(function(c){ viz.appendChild(pair(r.base, c.s, c.v)); });
+  }
+
+  else if (r.viz === 'dot'){
+    viz.appendChild(pair(r.base, '', 'ka'));
+    viz.appendChild(h('span',{class:'op', text:'\u2192'}));
+    viz.appendChild(pair(r.base, DATA.PULLI, 'k'));
+  }
+
+  else if (r.viz === 'everyLetter'){
+    viz.className = 'viz wrap';
+    r.bases.forEach(function(b){
+      var row = h('div',{class:'vrow'});
+      var cr = DATA.cons(b).r;
+      [{s:'',v:cr+'a'},{s:'\u0bbe',v:cr+'aa'},{s:'\u0bbf',v:cr+'i'},{s:'\u0bc1',v:cr+'u'},{s:'\u0bc7',v:cr+'ae'}]
+        .forEach(function(c){ row.appendChild(pair(b, c.s, c.v)); });
+      viz.appendChild(row);
+    });
+  }
+
+  else { /* maths */
+    viz.appendChild(h('div',{class:'vcell'},[ h('b',{class:'vnum', text:'18'}), h('span',{class:'vlbl', text:'letters'}) ]));
+    viz.appendChild(h('span',{class:'op', text:'+'}));
+    viz.appendChild(h('div',{class:'vcell'},[ h('b',{class:'vnum', text:'12'}), h('span',{class:'vlbl', text:'marks'}) ]));
+    viz.appendChild(h('span',{class:'op', text:'='}));
+    viz.appendChild(h('div',{class:'vcell'},[ h('b',{class:'vnum', style:'color:var(--teal)', text:'247'}), h('span',{class:'vlbl', text:'letters you can read'}) ]));
+  }
+
+  var body = h('div',{class:'card rule'},[
     h('div',{class:'n', text:s.n}),
-    h('h3',{text:s.rule.h}),
-    d,
-    h('p',{text:s.rule.p})
-  ]));
-  app.appendChild(contBtn(s.n === DATA.RULES.length ? 'I get it — let me start →' : 'Next →'));
+    h('h3',{text:r.h}),
+    viz
+  ]);
+  String(r.p).split('\n\n').forEach(function(para){
+    body.appendChild(h('p',{style:'margin:12px 0 0;color:var(--ink-2);font-size:16px', text:para}));
+  });
+  app.appendChild(body);
+  app.appendChild(contBtn(s.n === DATA.RULES.length ? 'Right \u2014 let me start \u2192' : 'Next \u2192'));
 }
 
 function stepTeach(s){

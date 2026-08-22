@@ -207,23 +207,34 @@ var DATA = (function () {
     { w:'வா, போகலாம்.', s:'vaa, poa-ga-laam', m:'Come, let us go.' }
   ];
 
-  /* ---- the 5 rules that make the whole script collapse ---- */
+  /* ---- Unit 0. One idea per card, and every one of them SHOWN.
+         An abstract claim about a script you cannot read yet is noise;
+         the same claim with the base letter picked out in colour is
+         the moment it clicks. `viz` names the picture ui.js draws. ---- */
   var RULES = [
-    { h:'Tamil is not 247 letters. It is a grid.',
-      p:'Every Tamil letter you will ever see is one consonant glued to one vowel. Nothing is random. Nothing is decorative. Once you see the grid, the fear goes away.',
-      demo:[{g:'18',l:'consonants'},{op:'×'},{g:'12',l:'vowels'},{op:'='},{g:'216',l:'combinations'}] },
-    { h:'A plain consonant already contains "a".',
-      p:'This is the single biggest thing beginners get wrong. க is not "k". It is already "ka". The vowel a is baked in, invisible, free.',
-      demo:[{g:'க',l:'= ka'},{op:'≠'},{g:'k',l:'not just k'}] },
-    { h:'A dot on top removes the vowel.',
-      p:'The little dot is called புள்ளி (pulli). It means "stop — no vowel here". That is how you write a bare consonant.',
-      demo:[{g:'க',l:'ka'},{op:'+'},{g:'்',l:'dot'},{op:'='},{g:'க்',l:'k'}] },
-    { h:'To change the vowel, add a sign around the letter.',
-      p:'Signs sit on the right, on the left, on the shoulder, or wrap both sides. The letter underneath never changes. You are not learning a new letter — you are decorating an old one.',
-      demo:[{g:'க',l:'ka'},{g:'கா',l:'kaa'},{g:'கி',l:'ki'},{g:'கு',l:'ku'},{g:'கே',l:'kae'},{g:'கோ',l:'koa'}] },
-    { h:'So you learn 30 things, and get 247 letters.',
-      p:'18 consonant shapes + 12 vowel signs. That is the whole writing system. Everything else is multiplication — and this app does the multiplication with you, one real word at a time.',
-      demo:[{g:'18',l:'shapes'},{op:'+'},{g:'12',l:'signs'},{op:'='},{g:'ஒரு மொழி',l:'oru mozhi · a language'}] }
+    { viz:'oneLetter',
+      h:'Start with one letter.',
+      p:'This is a Tamil letter. It says \u201cka\u201d. Tap the speaker and hear it.\n\nAnd here is the good news you never got with English: Tamil is honest. A letter makes the same sound every single time. There is no \u201ccough, dough, through\u201d in Tamil. Learn a letter once and you can read it forever.' },
+
+    { viz:'oneMark', base:'\u0b95', sign:'\u0bbe', from:'ka', to:'kaa',
+      h:'One small mark changes the sound.',
+      p:'Look at the gold part. That is the only thing I added \u2014 one stroke on the right. \u201cka\u201d has become \u201ckaa\u201d. Just held a bit longer.\n\nThe dark part is your original letter. It is still sitting right there, untouched. Tap the picture to take the mark off and put it back.' },
+
+    { viz:'twelve', base:'\u0b95',
+      h:'There are twelve marks. That is the whole system.',
+      p:'Same letter every time. Only the gold changes.\n\nThis is the row that scares people in every Tamil book, because it is printed in one colour and looks like twelve new letters to memorise. It is not. It is one letter wearing twelve different hats.' },
+
+    { viz:'dot', base:'\u0b95',
+      h:'A dot on top switches the vowel off.',
+      p:'Sometimes you want the bare consonant \u2014 just \u201ck\u201d, with no vowel after it. Tamil has one mark for that: a dot on the head.\n\nThat dot is called a pu\u1e37\u1e37i. You will see it constantly, on the end of words like \u0baa\u0bbe\u0bb2\u0bcd (paal, milk).' },
+
+    { viz:'everyLetter', bases:['\u0bae','\u0baa','\u0ba4'],
+      h:'The same twelve marks fit every letter.',
+      p:'You are not learning the marks again for each new letter. Learn them once on \u0b95 and they behave identically on \u0bae, on \u0baa, on all eighteen consonants.\n\nThat is the whole trick. It is why Tamil looks enormous and is actually small.' },
+
+    { viz:'maths',
+      h:'So you learn about 30 things, not 247.',
+      p:'18 consonants \u00d7 12 marks = 216 combinations. Add the 12 vowels standing alone, plus one rare extra symbol, and you get the famous 247 that every Tamil chart throws at you on page one.\n\nBut you never learn 247 of anything. You learn 18 letters and 12 marks, and the rest is multiplication. Thirty things. You can do thirty things.' }
   ];
 
   /* ---- the path ---------------------------------------- */
