@@ -18,7 +18,18 @@ var ASSETS = [
 ];
 
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }).then(function(){ return self.skipWaiting(); }));
+  /* addAll() may satisfy itself from the browser's own HTTP cache, which
+     can bake a previous version's files into a brand new cache. Force
+     each one down the wire so the precache always matches the deploy. */
+  e.waitUntil(
+    caches.open(CACHE).then(function (c) {
+      return Promise.all(ASSETS.map(function (u) {
+        return fetch(new Request(u, { cache: 'reload' }))
+          .then(function (r) { if (r && r.ok) return c.put(u, r); })
+          .catch(function (){});
+      }));
+    }).then(function (){ return self.skipWaiting(); })
+  );
 });
 
 self.addEventListener('activate', function (e) {
