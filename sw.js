@@ -50,8 +50,20 @@ self.addEventListener('fetch', function (e) {
   var sameOrigin = e.request.url.indexOf(self.location.origin) === 0;
 
   if (sameOrigin) {
+    /* Network first is only true if the fetch actually reaches the network.
+       Pages served these files with a four-hour max-age, so this fetch was
+       being answered from the browser's own HTTP cache and the worker
+       happily cached a stale copy on top. 'reload' forces the wire.
+
+       A navigation request cannot be rebuilt with new options - the
+       constructor rejects mode 'navigate' - and index.html is already
+       no-cache, so those go through untouched. */
+    var req = e.request;
+    if (req.mode !== 'navigate'){
+      try { req = new Request(req, { cache: 'reload' }); } catch (err) { req = e.request; }
+    }
     e.respondWith(
-      fetch(e.request).then(function (res) {
+      fetch(req).then(function (res) {
         if (res && res.status === 200) {
           var copy = res.clone();
           caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
