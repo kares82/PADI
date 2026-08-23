@@ -1,30 +1,16 @@
 # Cloudflare Pages response headers.
 #
-# Pages defaults to Cache-Control: public, max-age=14400 on static assets -
-# four hours. That is fine for a marketing site and wrong for this one: two
-# fixes were deployed, verified live, and still not seen, because the browser
-# never asked for the new files. It also quietly defeated the service
-# worker's network-first rule, since the fetch() the worker makes is itself
-# answered from the browser's HTTP cache.
+# Cache-Control is NOT set here. Pages serves its static assets with
+# public, max-age=14400 and a _headers rule does not override that: on a
+# fresh edge miss, /audio/index.json came back with the rule applied twice
+# (Pages' own value for a .json matched ours, so both were appended) while
+# /app/engine.js kept Pages' four hours and dropped ours entirely. Four
+# hours is how two verified deploys never reached the browser.
 #
-# So everything that decides how the app behaves revalidates every time. The
-# files are small and a 304 is a few hundred bytes; being a deploy behind is
-# far more expensive than that.
+# So caching is set in functions/_middleware.js, after the asset is served
+# and where nothing overrides it. This file is left for headers Pages does
+# not set itself.
 
 /*
-  Cache-Control: public, max-age=0, must-revalidate
-
-/sw.js
-  Cache-Control: public, max-age=0, must-revalidate
-
-/app/*
-  Cache-Control: public, max-age=0, must-revalidate
-
-/audio/index.json
-  Cache-Control: public, max-age=0, must-revalidate
-
-# The recordings are the one heavy thing here and they only change when the
-# whole set is re-recorded, so they get an hour. The service worker keeps its
-# own copy anyway, and its cache name changes with every build.
-/audio/*.mp3
-  Cache-Control: public, max-age=3600
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
