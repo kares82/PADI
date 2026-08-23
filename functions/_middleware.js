@@ -32,6 +32,9 @@ export async function onRequest(context) {
 
   const headers = new Headers(res.headers);
   headers.set('Cache-Control', cache);
+  // Marker: if this shows up but Cache-Control does not, the middleware is
+  // running and something downstream is rewriting the caching header.
+  headers.set('X-Padi-Mw', '1');
 
   return new Response(res.body, {
     status: res.status,
