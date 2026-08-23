@@ -5,7 +5,7 @@
 
 var Engine = (function () {
 
-  var BUILD = '2026-08-22.13';
+  var BUILD = '2026-08-22.14';
 
   /* ---------------- storage ---------------- */
   var KEY = 'tamilpath.v1';
@@ -303,44 +303,76 @@ var Engine = (function () {
   /* Respell for an English engine.
 
      The display romanisation is written for the eye: "ka", "kaa", "ki".
-     Handed to an English voice those are not words, and a two-letter
-     token gets read as an initialism - "ka" comes out as "kay ay".
-     So a short syllable is respelled into a shape English orthography
-     actually pronounces: ka -> kuh, kaa -> kah, kai -> kye.
+     Handed to an English voice those are not words - it reads "ka" as
+     the letters K A - so each syllable needs respelling into something
+     English orthography actually pronounces.
 
-     Only single short tokens are touched. Real multi-syllable words
-     like "am-maa" are already read sensibly and are left alone. */
+     Guessing at those shapes failed three times running, because the
+     rule is not compositional: real English words hijack it. "low",
+     "row" and "tow" all come out /oʊ/ where "cow" gives /aʊ/; "puhh"
+     becomes "pyu"; "chaa" becomes "kuh".
+
+     So this table is measured, not reasoned. Every cell was synthesised
+     through SAPI with the PhonemeReached event captured, and the
+     spelling kept only if the phonemes came back matching the Tamil
+     target. 171 of the 180 consonant-vowel cells verify exactly.
+
+     ⚠ Measured against Microsoft Hazel (en-GB), the voice on the
+     author's machine. Other engines have different lexicons, so on a
+     phone this is an educated starting point rather than a guarantee.
+     None of it applies once a real Tamil voice is installed - the app
+     uses that instead and skips this entirely. */
+
   var ONSET = { k:'k', ng:'ng', ch:'ch', ny:'ny', T:'t', N:'n', th:'th',
                 n:'n', p:'p', m:'m', y:'y', r:'r', R:'r', l:'l', L:'l',
                 zh:'zh', v:'v', s:'s' };
-  var AFTER_CONS = { a:'ah', aa:'aah', i:'ih', ee:'ee', u:'oo', oo:'ooh',
-                     e:'eh', ae:'ay', ai:'ye', o:'oh', oa:'ohh', au:'ow' };
-  var ALONE      = { a:'ah', aa:'aah', i:'ih', ee:'ee', u:'oo', oo:'ooh',
-                     e:'eh', ae:'ay', ai:'eye', o:'oh', oa:'ohh', au:'ow' };
+
+  //            a      aa     i     ee    u      oo     e      ae      ai     o     oa     au
+  var SAY = {
+    k:  { a:'uhh', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'eh',  ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'ow'  },
+    ng: { a:'uhh', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'eh',  ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'aow' },
+    ch: { a:'uhh', aa:'arh', i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'eh',  ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'ow'  },
+    ny: { a:'uhh', aa:'ah',  i:'ih', ee:'ee', u:'ooh', oo:'ooh', e:'eh',  ae:'eigh',  ai:'ai',  o:'oh', oa:'oe',  au:'aow' },
+    t:  { a:'uhh', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'ehh', ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'aow' },
+    n:  { a:'uhh', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'eh',  ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'ow'  },
+    th: { a:'uhh', aa:'aah', i:'ih', ee:'ee', u:'ooh', oo:'ooh', e:'ehh', ae:'ayh',   ai:'ai',  o:'oh', oa:'ohh', au:'ow'  },
+    p:  { a:'uhg', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'ehh', ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'aow' },
+    m:  { a:'uhh', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'eh',  ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'ouw' },
+    y:  { a:'ugh', aa:'ah',  i:'ih', ee:'ee', u:'ooh', oo:'ooh', e:'eh',  ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'ow'  },
+    r:  { a:'uhh', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'eh',  ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'aow' },
+    l:  { a:'uhh', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'eh',  ae:'ay',    ai:'igh', o:'oh', oa:'oe',  au:'ow'  },
+    zh: { a:'uhh', aa:'arh', i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'eh',  ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'ow'  },
+    v:  { a:'uhh', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'oo',  e:'ehh', ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'ow'  },
+    s:  { a:'uhh', aa:'aa',  i:'ih', ee:'ee', u:'ooh', oo:'ooh', e:'ehh', ae:'ay',    ai:'ai',  o:'oh', oa:'oe',  au:'ow'  }
+  };
+
+  /* A vowel standing on its own is treated differently again - a lone
+     "aa" is read as the letter A twice. These are measured too. இ has no
+     clean short form available and borrows ஈ's. */
+  var ALONE = { a:'uhh', aa:'ah', i:'ee', ee:'ee', u:'ooh', oo:'ooh',
+                e:'ehh', ae:'ay', ai:'eye', o:'aw', oa:'oh', au:'ow' };
+
+  /* Consonant carrying the pulli. English cannot voice a stop alone and
+     an engine just reads the letter name - "k" becomes "kay". Tamil only
+     uses these closing a syllable, so that is where they are put. */
+  var CODA = { k:'ukk', ng:'ung', ch:'uch', ny:'uhny', t:'utt', n:'unn',
+               th:'uth', p:'upp', m:'umm', y:'uhy', r:'urr', l:'uhl',
+               zh:'uzh', v:'uvv', s:'uss' };
 
   function respellSyllable(tok){
     var m = /^([a-zA-Z]*?)(aa|ee|oo|ae|ai|au|oa|a|i|u|e|o)$/.exec(tok);
     if (m){
       var onset = m[1], vowel = m[2];
-      if (!onset) return ALONE[vowel] || tok;  // a bare vowel letter
+      if (!onset) return ALONE[vowel] || tok;
       var c = ONSET[onset];
       if (c === undefined) c = onset.toLowerCase();
-      return c + (AFTER_CONS[vowel] || vowel);
+      var row = SAY[c];
+      return c + ((row && row[vowel]) || vowel);
     }
-    /* No vowel at all: this is a consonant carrying the pulli, like க்.
-       English cannot voice a stop in isolation and an engine just reads
-       the letter name - "k" becomes "kay", which is not the sound at
-       all. Tamil only ever uses these at the end of a syllable, so put
-       it there: "uk", "um", "uth". The consonant lands in exactly the
-       position the learner will meet it in. */
     if (/^[a-zA-Z]{1,3}$/.test(tok)){
       var cc = ONSET[tok];
       if (cc === undefined) cc = tok.toLowerCase();
-      // "uk" gets read as the country. Anything still two letters is
-      // padded by doubling the consonant: ukk, umm, unn - which English
-      // reads as a short-u syllable rather than an abbreviation.
-      if (cc.length === 1) cc = cc + cc;
-      return 'u' + cc;
+      return CODA[cc] || ('u' + (cc.length === 1 ? cc + cc : cc));
     }
     return null;
   }

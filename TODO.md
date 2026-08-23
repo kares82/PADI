@@ -16,12 +16,11 @@ Things spotted while using the app, to pick up next session.
 
 ## Still waiting on the user, from earlier
 
-- **Sound check.** padi-dpk.pages.dev/tools/sound-check — tap through, mark
-  what sounds wrong, send the list. The respellings are reasoned, not heard.
-- **Real Tamil audio.** `Add-WindowsCapability -Online -Name
-  "Language.TextToSpeech~~~ta-IN~0.0.1.0"` in an Administrator PowerShell,
-  then reboot. Removes the retroflex problem instead of working around it,
-  and lets `tools/make-audio.ps1` bake proper recordings in for everyone.
+- ~~**Sound check.**~~ Moot now that real recordings ship. The English
+  approximation only runs where no Tamil voice and no clips exist.
+- ~~**Real Tamil audio.**~~ Done 22 Aug. Microsoft Valluvar (ta-IN) installed,
+  all 561 clips recorded into `audio/` and committed, so the deployed app
+  speaks real Tamil to every visitor regardless of their device.
 - **Jaffna review of the `LK` column** in `app/register.js`. The Indian and
   formal columns are high confidence; the Sri Lankan one needs a native
   speaker before the app is shown around.

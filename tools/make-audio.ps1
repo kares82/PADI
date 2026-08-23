@@ -128,7 +128,14 @@ foreach ($text in $items) {
 
   if ((Test-Path $path) -and -not $Force) { $skipped++; continue }
 
-  $stream = Await ($synth.SynthesizeTextToStreamAsync($text)) ([Windows.Media.SpeechSynthesis.SpeechSynthesisStream])
+  # A bare consonant with the pulli has no vowel to carry it, so the stops
+  # synthesise as near-silence. Tamil only uses them closing a syllable, so
+  # record them there - the key stays the bare letter, only the spoken text
+  # gains a leading vowel.
+  $spoken = $text
+  if ($text.Length -eq 2 -and $text[1] -eq [char]0x0BCD) { $spoken = [char]0x0B85 + $text }
+
+  $stream = Await ($synth.SynthesizeTextToStreamAsync($spoken)) ([Windows.Media.SpeechSynthesis.SpeechSynthesisStream])
   $size   = [uint32]$stream.Size
   $reader = New-Object Windows.Storage.Streams.DataReader($stream.GetInputStreamAt(0))
   Await ($reader.LoadAsync($size)) ([uint32]) | Out-Null
