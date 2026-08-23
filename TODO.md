@@ -1,5 +1,16 @@
 # Open items
 
+## Voice output is off
+
+`VOICE = false` at the top of `app/engine.js`. That one line hides every
+speaker button, stops the clip loader and makes `speak()` a no-op; the
+scoring tones are not speech and still work. Flipping it back to `true` is
+the whole job - verified by flipping it and watching the buttons return.
+
+The 627 Microsoft Valluvar clips are still in `audio/` and still correct.
+They are not good enough to learn from, so the plan is to re-record with
+Sarvam Bulbul v3 and flip the switch. See `tools/make-audio-sarvam.ps1`.
+
 Things spotted while using the app, to pick up next session.
 
 ## Fixed

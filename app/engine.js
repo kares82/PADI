@@ -5,7 +5,18 @@
 
 var Engine = (function () {
 
-  var BUILD = '2026-08-23.2';
+  var BUILD = '2026-08-23.3';
+
+  /* ---- voice output: off ----
+     The Windows voice the clips were recorded with is not good enough to
+     learn from, and an English engine reading a respelled romanisation is
+     worse. Rather than teach people the wrong sounds, the app says nothing
+     until there are recordings worth hearing (Sarvam Bulbul is the plan).
+
+     One switch, deliberately. Every speaker button, every tap-to-hear and
+     the clip loader all read it, so turning the voice back on is this line
+     and nothing else. The scoring tones are not speech and keep working. */
+  var VOICE = false;
 
   /* ---------------- storage ---------------- */
   var KEY = 'tamilpath.v1';
@@ -211,6 +222,7 @@ var Engine = (function () {
   var clipCache = {};
 
   function loadClips(){
+    if (!VOICE) return;
     if (typeof fetch !== 'function') return;
     fetch('audio/index.json', { cache:'no-cache' })
       .then(function(r){ return r.ok ? r.json() : null; })
@@ -415,6 +427,7 @@ var Engine = (function () {
   }
 
   function audioMode(){
+    if (!VOICE) return 'off';
     if (clips) return 'clips';
     if (voice) return 'tamil';
     if (anyVoice) return 'approx';
@@ -447,6 +460,7 @@ var Engine = (function () {
   function hasTamilVoice(){ return !!voice; }
 
   function speak(text, rate){
+    if (!VOICE) return false;
     if (!S.settings.sound) return false;
     var key = speakKey(text);
     if (!key) return false;
@@ -785,7 +799,7 @@ var Engine = (function () {
     BUILD:BUILD, applyTheme:applyTheme, applyScheme:applyScheme, isDark:isDark, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
     checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
     mastery:mastery, GAPS:GAPS,
-    speak:speak, stopAudio:stopAudio, speakKey:speakKey, hasTamilVoice:hasTamilVoice, hasClips:hasClips,
+    speak:speak, stopAudio:stopAudio, voiceOn:function(){ return VOICE; }, speakKey:speakKey, hasTamilVoice:hasTamilVoice, hasClips:hasClips,
     audioMode:audioMode, romanFor:romanFor, speakableRoman:speakableRoman, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
     Trace:Trace, shuffle:shuffle, sample:sample, pick:pick, toast:toast
   };

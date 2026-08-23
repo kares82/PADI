@@ -44,8 +44,10 @@ function backTo(hash){
   return function(){ if (location.hash === hash) route(); else location.hash = hash; };
 }
 
-/* speaker button */
+/* Speaker button, or nothing at all while the voice is off. h() drops
+   null children, so every call site can stay exactly as it is. */
 function spk(text, big){
+  if (!Engine.voiceOn()) return null;
   return h('button',{class:'speaker', 'aria-label':'Play sound', style: big?'font-size:28px':'',
     onclick:function(e){ e.stopPropagation(); Engine.speak(text); }},['🔊']);
 }
@@ -1069,7 +1071,7 @@ function kuralBlock(k){
     h('div',{class:'tag', text:k.br}),
     h('div',{style:'font-weight:700;font-size:15.5px;margin-top:8px', text:'\u201c' + k.e + '\u201d'}),
     h('div',{class:'sub', style:'font-size:13.5px;margin-top:8px', text:k.note}),
-    h('button',{class:'speaker', style:'margin-top:4px', onclick:function(e){ e.stopPropagation(); Engine.speak(k.a + ' ' + k.b); }},['\ud83d\udd0a'])
+    Engine.voiceOn() ? h('button',{class:'speaker', style:'margin-top:4px', onclick:function(e){ e.stopPropagation(); Engine.speak(k.a + ' ' + k.b); }},['\ud83d\udd0a']) : null
   ]);
 }
 
@@ -1191,23 +1193,11 @@ function renderHome(){
     app.appendChild(b);
   });
 
-  var mode = Engine.audioMode();
-  if (mode !== 'clips' && mode !== 'tamil'){
-    var warn = h('div',{class:'note', style:'margin-top:14px'},[
-      h('b',{text: mode === 'approx'
-        ? 'You are hearing an approximation. '
-        : 'No sound on this device. '}),
-      mode === 'approx'
-        ? 'This device has no Tamil voice, so the app is reading its own spelled-out pronunciation aloud in an English voice. It gets the shape of a word roughly right, but English has no retroflex sounds at all — so ல/ள, ண/ந/ன and ர/ற all come out identical, and ழ is only a guess. Those are exactly the letters the Look-alike Clinic exists to teach: trust the mouth hints there, not what you hear here.'
-        : 'This device has no speech voices at all, so nothing can be spoken.',
-      h('br'), h('br'),
-      'For real Tamil audio: on Android install a Tamil voice under Settings \u203a Language \u203a Text-to-speech; on iPhone under Settings \u203a Accessibility \u203a Spoken Content \u203a Voices; on Windows see the README \u2014 one command adds a Tamil voice, and tools/make-audio-google.ps1 bakes proper recordings into the app for everyone.'
-    ]);
-    app.appendChild(warn);
-    setTimeout(function(){
-      var m2 = Engine.audioMode();
-      if (m2 === 'clips' || m2 === 'tamil') warn.remove();
-    }, 1200);
+  if (Engine.audioMode() === 'off'){
+    app.appendChild(h('div',{class:'note', style:'margin-top:14px'},[
+      h('b',{text:'No sound yet, on purpose. '}),
+      'The voices available so far either mangle the letters or read an English approximation of them, and a wrong sound learned early is harder to undo than no sound at all. Proper Tamil recordings are on the way. Until they land, go by the mouth hints and the romanisation.'
+    ]));
   }
 
   app.appendChild(h('div',{class:'h2', text:'More'}));
@@ -1470,7 +1460,7 @@ function renderStory(id){
         h('div',{class:'tag', style:'margin-top:3px', text:ln.r}),
         hideEn ? null : h('div',{class:'sen', text:ln.e})
       ]),
-      h('button',{class:'speaker', onclick:function(){ Engine.speak(ln.t); }},['\ud83d\udd0a'])
+      Engine.voiceOn() ? h('button',{class:'speaker', onclick:function(){ Engine.speak(ln.t); }},['\ud83d\udd0a']) : null
     ]));
   });
   app.appendChild(body);
@@ -1480,7 +1470,7 @@ function renderStory(id){
     livingText(f.moral.t, 'big'),
     h('div',{class:'tag', style:'margin-top:3px', text:f.moral.r}),
     h('div',{style:'font-weight:700;font-size:16px;margin-top:6px', text:'\u201c' + f.moral.e + '\u201d'}),
-    h('button',{class:'speaker', onclick:function(){ Engine.speak(f.moral.t); }},['\ud83d\udd0a'])
+    Engine.voiceOn() ? h('button',{class:'speaker', onclick:function(){ Engine.speak(f.moral.t); }},['\ud83d\udd0a']) : null
   ]));
 
   app.appendChild(h('div',{class:'note', style:'margin-top:12px'},[
@@ -1565,7 +1555,7 @@ function renderGrid(){
       h('div',{class:'u'},[ ta(g), h('span',{class:'lbl', text: isPulli ? c.r : c.r + col.lbl }) ])
     ]));
     panel.appendChild(h('div',{class:'row'},[
-      h('button',{class:'btn sm ghost', onclick:function(){ Engine.speak(g); }},['🔊 Hear it']),
+      Engine.voiceOn() ? h('button',{class:'btn sm ghost', onclick:function(){ Engine.speak(g); }},['🔊 Hear it']) : null,
       h('button',{class:'btn sm', onclick:function(){ go('#/write?g='+encodeURIComponent(g)); }},['✍️ Trace it'])
     ]));
     panel.appendChild(h('div',{class:'tag', style:'margin-top:10px', text:c.tip}));
@@ -1636,7 +1626,7 @@ function renderWrite(q){
     h('div',{class:'kicker', id:'wLabel', text:''}),
     h('div',{style:'display:flex;justify-content:center;align-items:center;gap:8px;margin:4px 0 12px'},[
       h('span',{class:'roman', id:'wRoman', text:''}),
-      h('button',{class:'speaker', onclick:function(){ Engine.speak(current); }},['🔊'])
+      Engine.voiceOn() ? h('button',{class:'speaker', onclick:function(){ Engine.speak(current); }},['🔊']) : null
     ]),
     hostWrap, scoreEl
   ]);
