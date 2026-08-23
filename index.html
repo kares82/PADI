@@ -21,6 +21,15 @@ try{ var _s=(JSON.parse(localStorage.getItem('tamilpath.v1')||'{}').settings||{}
 </head>
 <body>
 
+<div id="splash" aria-hidden="true">
+  <div class="sp-inner">
+    <div class="sp-word"></div>
+    <div class="sp-roman">“padi” — it means read</div>
+    <div class="sp-line">You already speak it.</div>
+  </div>
+  <div class="sp-hint">tap to skip</div>
+</div>
+
 <header id="topbar">
   <button id="backBtn" class="icon-btn" aria-label="Go back" hidden>‹</button>
   <div id="topTitle">Padi Tamil</div>
@@ -46,6 +55,7 @@ try{ var _s=(JSON.parse(localStorage.getItem('tamilpath.v1')||'{}').settings||{}
 <script src="app/compose.js"></script>
 <script src="app/engine.js"></script>
 <script src="app/ui.js"></script>
+<script src="app/splash.js"></script>
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   var hadController = !!navigator.serviceWorker.controller, reloaded = false;

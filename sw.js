@@ -1,7 +1,7 @@
 /* Padi Tamil — offline cache.
    Once you have opened the app on a device with a connection,
    it keeps working with no internet at all. */
-var CACHE = 'padi-tamil-2026-08-22.12';
+var CACHE = 'padi-tamil-2026-08-22.13';
 var ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ var ASSETS = [
   './app/compose.js',
   './app/engine.js',
   './app/ui.js',
+  './app/splash.js',
   './manifest.webmanifest'
 ];
 
