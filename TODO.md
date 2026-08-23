@@ -1,5 +1,25 @@
 # Open items
 
+## One thing to change in the Cloudflare dashboard
+
+**Browser Cache TTL is overriding our caching headers.** This is why two
+verified deploys were reported as "nothing has changed" - the files were on
+the server, and the browser was not asking for them for up to four hours.
+
+  the red-triangle.net zone (not the Pages project)
+    → Caching → Configuration → Browser Cache TTL → "Respect Existing Headers"
+
+Proved rather than assumed: `functions/_middleware.js` sets Cache-Control and
+also set a marker header. The marker came back, the Cache-Control did not, so
+the function runs and the zone rewrites the header downstream. `_headers`
+cannot do it either - Pages appends our rule when it agrees with its own
+default and drops it when it disagrees.
+
+Not urgent: the app already self-heals within one automatic reload, because
+index.html is max-age=0, the worker script is registered with
+updateViaCache:'none', and the worker fetches assets with cache:'reload'.
+This setting is what makes it right on the first load instead of the second.
+
 ## Voice output is off
 
 `VOICE = false` at the top of `app/engine.js`. That one line hides every

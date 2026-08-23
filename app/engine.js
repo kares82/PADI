@@ -5,7 +5,7 @@
 
 var Engine = (function () {
 
-  var BUILD = '2026-08-23.6';
+  var BUILD = '2026-08-23.7';
 
   /* ---- voice output: off ----
      The Windows voice the clips were recorded with is not good enough to

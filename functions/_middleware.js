@@ -13,9 +13,22 @@
    asset has been served but before it leaves, where nothing overrides
    it.
 
-   The service worker also asks for the wire explicitly, and that alone
-   would heal this within two page loads. This makes it true on the
-   first one, and true for anyone whose service worker never starts. */
+   ⚠ This is correct but not yet in effect. Proved by shipping a marker
+   header alongside it: the marker came back and the Cache-Control did
+   not, so the function runs and the zone rewrites the header afterwards.
+   That is Browser Cache TTL on the red-triangle.net zone, set to four
+   hours, which overrides whatever the origin says. Fix it in the
+   Cloudflare dashboard:
+
+     the zone (not the Pages project) → Caching → Configuration
+       → Browser Cache TTL → "Respect Existing Headers"
+
+   Until then the app still gets new builds, by a different route:
+   index.html is max-age=0, the worker script is registered with
+   updateViaCache:'none' so the browser always fetches it fresh, and the
+   new worker then asks for every asset with cache:'reload'. That heals a
+   stale browser within one automatic reload. This file removes the
+   reliance on that chain and is what makes it right on the first load. */
 
 const HOUR = 3600;
 
@@ -32,9 +45,6 @@ export async function onRequest(context) {
 
   const headers = new Headers(res.headers);
   headers.set('Cache-Control', cache);
-  // Marker: if this shows up but Cache-Control does not, the middleware is
-  // running and something downstream is rewriting the caching header.
-  headers.set('X-Padi-Mw', '1');
 
   return new Response(res.body, {
     status: res.status,
