@@ -506,9 +506,13 @@ function contBtn(label){
 function stepRule(s){
   var r = s.rule, viz = h('div',{class:'viz'});
 
+  /* Glyphs shown side by side must share a vertical frame, or the base
+     letter changes size from cell to cell and the picture argues with
+     the caption. */
+  var frame = null;
   function pair(base, sign, label){
     var w = h('div',{class:'vcell'});
-    w.appendChild(Compose.el(base, sign, 54));
+    w.appendChild(Compose.el(base, sign, 54, frame));
     w.appendChild(h('span',{class:'vlbl', text:label}));
     return w;
   }
@@ -524,9 +528,10 @@ function stepRule(s){
     var on = true;
     var slot = h('div',{class:'vcell', style:'cursor:pointer'});
     var cap  = h('div',{class:'roman', style:'font-size:24px;margin-top:6px'});
+    var f2 = Compose.frameFor([r.base, r.base + r.sign], 96);
     function paint(){
       slot.innerHTML = '';
-      slot.appendChild(Compose.el(r.base, on ? r.sign : '', 96));
+      slot.appendChild(Compose.el(r.base, on ? r.sign : '', 96, f2));
       cap.textContent = on ? r.to : r.from;
     }
     slot.addEventListener('click', function(){ on = !on; paint(); Engine.speak(r.base + (on ? r.sign : '')); });
@@ -542,10 +547,12 @@ function stepRule(s){
     var cols = [{s:'',v:'ka'}].concat(DATA.SIGNS.slice(1).map(function(sg){
       return { s:sg.s, v:DATA.cons(r.base).r + sg.r };
     }));
+    frame = Compose.frameFor(cols.map(function(c){ return r.base + c.s; }), 54);
     cols.forEach(function(c){ viz.appendChild(pair(r.base, c.s, c.v)); });
   }
 
   else if (r.viz === 'dot'){
+    frame = Compose.frameFor([r.base, r.base + DATA.PULLI], 54);
     viz.appendChild(pair(r.base, '', 'ka'));
     viz.appendChild(h('span',{class:'op', text:'\u2192'}));
     viz.appendChild(pair(r.base, DATA.PULLI, 'k'));
@@ -553,6 +560,10 @@ function stepRule(s){
 
   else if (r.viz === 'everyLetter'){
     viz.className = 'viz wrap';
+    var marks = ['', '\u0bbe', '\u0bbf', '\u0bc1', '\u0bc7'];
+    var every = [];
+    r.bases.forEach(function(b){ marks.forEach(function(mk){ every.push(b + mk); }); });
+    frame = Compose.frameFor(every, 54);
     r.bases.forEach(function(b){
       var row = h('div',{class:'vrow'});
       var cr = DATA.cons(b).r;

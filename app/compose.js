@@ -58,19 +58,44 @@ var Compose = (function () {
     };
   }
 
-  function build(base, sign, px){
-    var F = px;
-    var pad = Math.round(F * 0.22);
-    var searchMax = F * 0.8;                 // how far the base may be slid
+  /* A shared vertical frame for a whole row.
+
+     Cropping each glyph to its own ink box and then forcing every image
+     to one CSS height made the base letter a different size in every
+     cell - க came out 44% larger beside கா than beside கு. On a card
+     whose entire claim is "same letter every time", the picture was
+     contradicting the sentence.
+
+     So a set is measured once for its tallest ascent and deepest
+     descent, and every glyph in it is drawn into that same frame, on
+     the same baseline. Only the width varies, which is honest: the
+     marks really do sit on different sides. */
+  function frameFor(texts, px){
+    var a = 0, d = 0;
+    texts.forEach(function (t){
+      var m = metrics(t, px);
+      if (m.a > a) a = m.a;
+      if (m.d > d) d = m.d;
+    });
+    return { a:a, d:d };
+  }
+
+  function build(base, sign, px, frame){
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var F   = px * dpr;                       // work at device resolution
+    var pad = Math.round(F * 0.14);
+    var searchMax = F * 0.8;
 
     var mm = metrics(base + sign, F);
     var mb = metrics(base, F);
 
-    // wide enough for the combined glyph AND for the base at full offset
+    var ascent  = frame ? frame.a * dpr : Math.max(mm.a, mb.a);
+    var descent = frame ? frame.d * dpr : Math.max(mm.d, mb.d);
+
     var W = Math.ceil(pad * 2 + Math.max(mm.l + mm.r, mb.l + mb.r + searchMax));
-    var H = Math.ceil(pad * 2 + Math.max(mm.a, mb.a) + Math.max(mm.d, mb.d));
+    var H = Math.ceil(pad * 2 + ascent + descent);
     var originX = pad + mm.l;
-    var baseY   = pad + Math.max(mm.a, mb.a);
+    var baseY   = pad + ascent;
 
     function ink(text, dx){
       var c = document.createElement('canvas');
@@ -85,40 +110,39 @@ var Compose = (function () {
 
     var whole = ink(base + sign, 0);
 
-    // slide the bare base across and keep the offset that sits most
-    // neatly inside the combined glyph
     var bestDx = 0, best = -Infinity, dx;
     for (dx = 0; dx <= searchMax; dx += 2){
       var b = ink(base, dx), inside = 0, outside = 0;
       for (var i = 3; i < b.length; i += 4){
         if (b[i] > 90){ if (whole[i] > 90) inside++; else outside++; }
       }
-      var score = inside - outside * 2;          // punish ink that spills out
+      var score = inside - outside * 2;
       if (score > best){ best = score; bestDx = dx; }
     }
     var baseInk = ink(base, bestDx);
 
-    // ink bounding box of the combined glyph, so the result crops tight
-    var x0 = W, y0 = H, x1 = -1, y1 = -1, px_, py;
+    /* Crop horizontally only. Trimming vertically too is what destroyed
+       the shared baseline, since every glyph has a different ink height. */
+    var x0 = W, x1 = -1, px_, py;
     for (py = 0; py < H; py++) for (px_ = 0; px_ < W; px_++){
       if (whole[(py * W + px_) * 4 + 3] > 40){
-        if (px_ < x0) x0 = px_; if (px_ > x1) x1 = px_;
-        if (py < y0) y0 = py;   if (py > y1) y1 = py;
+        if (px_ < x0) x0 = px_;
+        if (px_ > x1) x1 = px_;
       }
     }
     if (x1 < 0) return null;
-    var m2 = Math.round(px * 0.07);
-    x0 = Math.max(0, x0 - m2); y0 = Math.max(0, y0 - m2);
-    x1 = Math.min(W - 1, x1 + m2); y1 = Math.min(H - 1, y1 + m2);
-    var cw = x1 - x0 + 1, chh = y1 - y0 + 1;
+    var m2 = Math.round(F * 0.07);
+    x0 = Math.max(0, x0 - m2);
+    x1 = Math.min(W - 1, x1 + m2);
+    var cw = x1 - x0 + 1;
 
     var col = colours();
     var out = document.createElement('canvas');
-    out.width = cw; out.height = chh;
+    out.width = cw; out.height = H;
     var oc = out.getContext('2d');
-    var img = oc.createImageData(cw, chh);
-    for (py = 0; py < chh; py++) for (px_ = 0; px_ < cw; px_++){
-      var src = ((py + y0) * W + (px_ + x0)) * 4;
+    var img = oc.createImageData(cw, H);
+    for (py = 0; py < H; py++) for (px_ = 0; px_ < cw; px_++){
+      var src = (py * W + (px_ + x0)) * 4;
       var a = whole[src + 3];
       if (!a) continue;
       var c = (baseInk[src + 3] > 90) ? col.base : col.mark;
@@ -127,24 +151,34 @@ var Compose = (function () {
       img.data[dst+3] = a;
     }
     oc.putImageData(img, 0, 0);
+    out._cssW = cw / dpr;
+    out._cssH = H / dpr;
     return out;
   }
 
-  /* Returns an <img> showing base+sign, base in ink, mark in gold.
-     `sign` may be '' (just the bare letter) or the pulli. */
-  function el(base, sign, px){
+  /* Returns an <img> of base+sign, base in the page's ink, mark in the
+     accent. Pass the frame from frameFor() when several glyphs are shown
+     together, so they share a baseline and the base letter never
+     changes size between them. */
+  function el(base, sign, px, frame){
     px = px || 60;
-    var key = base + '|' + sign + '|' + px + '|' + themeKey();
-    if (!cache[key]){
-      var c = build(base, sign, px);
-      cache[key] = c ? c.toDataURL() : null;
+    var fk = frame ? ('|' + Math.round(frame.a) + ',' + Math.round(frame.d)) : '';
+    var key = base + '|' + sign + '|' + px + '|' + themeKey() + fk;
+    var rec = cache[key];
+    if (!rec){
+      var c = build(base, sign, px, frame);
+      rec = cache[key] = c ? { src:c.toDataURL(), w:c._cssW, h:c._cssH } : null;
     }
     var img = document.createElement('img');
     img.alt = base + sign;
-    img.style.cssText = 'height:' + Math.round(px * 1.25) + 'px;width:auto;display:block';
-    if (cache[key]) img.src = cache[key];
+    if (rec){
+      img.src = rec.src;
+      img.style.cssText = 'width:' + rec.w + 'px;height:' + rec.h + 'px;display:block';
+    } else {
+      img.style.cssText = 'display:block';
+    }
     return img;
   }
 
-  return { el:el };
+  return { el:el, frameFor:frameFor };
 })();

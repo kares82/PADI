@@ -2,17 +2,14 @@
 
 Things spotted while using the app, to pick up next session.
 
-## Reported 22 Aug 2026 — not yet investigated
+## Fixed
 
-- **Unit 0, card 3: the coloured parts are messed up.**
-  That is the *"There are twelve marks. That is the whole system."* card —
-  the row of க கா கி கீ கு கூ கெ கே கை கொ கோ கௌ where the base letter is
-  drawn in ink and the added mark in the accent colour, by `app/compose.js`.
-  No detail yet on *how* it is wrong; ask before assuming.
-  Worth checking first: the twelve images are laid out in `.viz.wrap` by
-  `stepRule()` in `app/ui.js`, and each is a cropped PNG whose height is
-  fixed but whose width varies per glyph — the fused ு/ூ forms and the
-  wrap-around ொ/ோ/ௌ are the likeliest to look wrong.
+- ~~**Unit 0, card 3: the coloured parts are messed up.**~~ Fixed 23 Aug.
+  Each glyph was cropped to its own ink box and then forced to one CSS
+  height, so the shared base letter rendered anywhere from 1.21x to 1.74x
+  depending on which mark sat beside it. A card claiming "same letter
+  every time" was resizing the letter in every cell. Glyph sets now share
+  one vertical frame and display at 1:1.
 
 ## Still waiting on the user, from earlier
 

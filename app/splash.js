@@ -7,7 +7,8 @@
    name writes itself using the same pen-path engine that teaches
    handwriting in the lessons.
 
-   Tapping anywhere skips it. ?nosplash skips it entirely.
+   Tapping anywhere still skips it, just without saying so.
+   ?nosplash skips it entirely.
    ============================================================ */
 
 var Splash = (function () {
@@ -102,7 +103,6 @@ var Splash = (function () {
     var roman  = el.querySelector('.sp-roman');
     var mean   = el.querySelector('.sp-mean');
     var line   = el.querySelector('.sp-line');
-    var hint   = el.querySelector('.sp-hint');
 
     var done = false;
     function finish(){
@@ -114,7 +114,6 @@ var Splash = (function () {
     el.addEventListener('click', finish);
     el.addEventListener('touchstart', finish, { passive:true });
     setTimeout(finish, TOTAL);
-    setTimeout(function (){ hint && hint.classList.add('on'); }, 700);
 
     var reduced = false;
     try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e){}

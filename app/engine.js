@@ -5,7 +5,7 @@
 
 var Engine = (function () {
 
-  var BUILD = '2026-08-22.14';
+  var BUILD = '2026-08-23.1';
 
   /* ---------------- storage ---------------- */
   var KEY = 'tamilpath.v1';
