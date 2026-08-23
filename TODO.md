@@ -4,6 +4,24 @@ Things spotted while using the app, to pick up next session.
 
 ## Fixed
 
+- ~~**The voice output was unintelligible.**~~ Fixed 23 Aug. Three faults,
+  found by measuring rather than listening:
+  1. *Clips played on top of each other.* The speech path got one-voice-at-
+     a-time free from `speechSynthesis.cancel()`; recorded clips are separate
+     elements with no queue, so a screen that speaks as it renders piled onto
+     the tap that got you there. Measured three Tamil voices sounding at once.
+     Everything audible now goes through one channel, and leaving a screen
+     stops it.
+  2. *66 tappable words had no recording* - every Aathichudi and Kural word -
+     so they fell through to the English approximation, which respells "ka"
+     as "kuhh". Recorded; the app is now at 627 clips for 627 speakable
+     strings, and the approximation can no longer fire on its own content.
+  3. *One clip was genuinely off-pitch.* Pitch-tracking all 246 letter clips
+     against the median for their own vowel (close vowels really do sit
+     higher, so a single global baseline invents faults) found exactly one
+     outlier: chi at 232 Hz where every other -i- syllable sits at 151.
+     Re-recorded through SSML at a swept, not guessed, setting.
+
 - ~~**Unit 0, card 3: the coloured parts are messed up.**~~ Fixed 23 Aug.
   Each glyph was cropped to its own ink box and then forced to one CSS
   height, so the shared base letter rendered anywhere from 1.21x to 1.74x

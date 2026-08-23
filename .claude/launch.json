@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "tamil-app",
+      "name": "padi",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5177"],
-      "port": 5177
+      "runtimeArgs": ["-m", "http.server", "8899"],
+      "port": 8899
     }
   ]
 }

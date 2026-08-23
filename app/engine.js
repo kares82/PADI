@@ -5,7 +5,7 @@
 
 var Engine = (function () {
 
-  var BUILD = '2026-08-23.1';
+  var BUILD = '2026-08-23.2';
 
   /* ---------------- storage ---------------- */
   var KEY = 'tamilpath.v1';
@@ -233,6 +233,27 @@ var Engine = (function () {
     return t;
   }
 
+  /* Only ever one voice at a time.
+
+     The speech path always had this for free: speechSynthesis.cancel()
+     silenced whatever was still talking before the next utterance
+     started. Recorded clips have no such queue - every clip is its own
+     element and they all sound at once. Several screens speak as they
+     render, and the tap that got you there is often still playing, so
+     two or three Tamil voices ended up talking over each other. Which
+     is not a subtle fault: it is unintelligible.
+
+     Everything that makes a noise goes through here first. */
+  var playing = null;
+
+  function stopAudio(){
+    if (playing){
+      try { playing.pause(); playing.currentTime = 0; } catch (e){}
+      playing = null;
+    }
+    if ('speechSynthesis' in window){ try { speechSynthesis.cancel(); } catch (e){} }
+  }
+
   function playClip(text){
     if (!clips || !clips[text]) return false;
     var a = clipCache[text];
@@ -241,8 +262,15 @@ var Engine = (function () {
       a.preload = 'auto';
       clipCache[text] = a;
     }
-    try { a.currentTime = 0; var pr = a.play(); if (pr && pr.catch) pr.catch(function(){}); return true; }
-    catch (e){ return false; }
+    try {
+      stopAudio();
+      a.currentTime = 0;
+      playing = a;
+      a.onended = function (){ if (playing === a) playing = null; };
+      var pr = a.play(); if (pr && pr.catch) pr.catch(function(){});
+      return true;
+    }
+    catch (e){ playing = null; return false; }
   }
 
   function hasClips(){ return !!clips; }
@@ -441,7 +469,7 @@ var Engine = (function () {
         u.rate  = rate ? rate * 0.9 : 0.62;   // slower: it is an approximation
       }
       u.pitch = 1;
-      speechSynthesis.cancel();
+      stopAudio();
       speechSynthesis.speak(u);
       return true;
     }catch(e){ return false; }
@@ -757,7 +785,7 @@ var Engine = (function () {
     BUILD:BUILD, applyTheme:applyTheme, applyScheme:applyScheme, isDark:isDark, award:award, todayXp:todayXp, level:level, levelInfo:levelInfo,
     checkLevelUp:checkLevelUp, markRead:markRead, hasRead:hasRead,
     mastery:mastery, GAPS:GAPS,
-    speak:speak, speakKey:speakKey, hasTamilVoice:hasTamilVoice, hasClips:hasClips,
+    speak:speak, stopAudio:stopAudio, speakKey:speakKey, hasTamilVoice:hasTamilVoice, hasClips:hasClips,
     audioMode:audioMode, romanFor:romanFor, speakableRoman:speakableRoman, dingOK:dingOK, dingNo:dingNo, buzz:buzz,
     Trace:Trace, shuffle:shuffle, sample:sample, pick:pick, toast:toast
   };

@@ -1711,6 +1711,9 @@ function route(){
   }
   var parts = path.split('/').filter(Boolean);
   setBack(null);   // each screen re-declares its own
+  /* A sentence clip runs to twelve seconds. Leaving the screen should
+     end it, not have it follow you to the next one. */
+  Engine.stopAudio();
 
   if (!parts.length){ curTab='/'; renderHome(); }
   else if (parts[0] === 'unit'){ curTab='/'; renderUnit(parts[1]); }

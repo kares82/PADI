@@ -135,7 +135,21 @@ foreach ($text in $items) {
   $spoken = $text
   if ($text.Length -eq 2 -and $text[1] -eq [char]0x0BCD) { $spoken = [char]0x0B85 + $text }
 
-  $stream = Await ($synth.SynthesizeTextToStreamAsync($spoken)) ([Windows.Media.SpeechSynthesis.SpeechSynthesisStream])
+  # Measured pitch corrections. Every clip was pitch-tracked and compared
+  # with the median for its own vowel - close vowels genuinely sit higher
+  # than open ones, so the comparison has to be within a class or it
+  # invents faults. Exactly one clip failed: the voice renders this
+  # syllable at 232 Hz where every other -i- syllable sits at 151, a jump
+  # of a musical fifth for one letter. The value below was swept, not
+  # guessed; -50% is as far as the engine will go and lands it at 172.
+  $pitch = @{ ([char]0x0B9A + [char]0x0BBF) = 50 }
+
+  if ($pitch.ContainsKey($text)) {
+    $ssml = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='ta-IN'><prosody pitch='-$($pitch[$text])%'>$spoken</prosody></speak>"
+    $stream = Await ($synth.SynthesizeSsmlToStreamAsync($ssml)) ([Windows.Media.SpeechSynthesis.SpeechSynthesisStream])
+  } else {
+    $stream = Await ($synth.SynthesizeTextToStreamAsync($spoken)) ([Windows.Media.SpeechSynthesis.SpeechSynthesisStream])
+  }
   $size   = [uint32]$stream.Size
   $reader = New-Object Windows.Storage.Streams.DataReader($stream.GetInputStreamAt(0))
   Await ($reader.LoadAsync($size)) ([uint32]) | Out-Null
